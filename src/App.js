@@ -18,6 +18,8 @@ import LoginScreen from "./components/LoginScreen";
 import ToastContainer from "./components/ToastContainer";
 import LoadingScreen from "./components/LoadingScreen";
 
+console.log(process.env.FIREBASE_API)
+
 function App() {
   const [user, setUser] = useState(null);
   const [activePage, setActivePage] = useState("dashboard");

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { collection, getDocs, deleteDoc, doc, updateDoc, query, orderBy } from "firebase/firestore";
 import { db } from "../firebase";
 
-export default function AdminDashboard({ user, addToast }) {
+export default function AdminDashboard({ users, addToast }) {
   const [users, setUsers] = useState([]);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
