@@ -1,0 +1,12 @@
+body { font-family: Arial, sans-serif; margin: 0; padding: 0; background:#f7f8fb; }
+.app { max-width: 900px; margin: 28px auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+.header { display:flex; justify-content:space-between; align-items:center; }
+.controls { margin-top: 12px; display:flex; gap:8px; flex-wrap:wrap; }
+.caption-box { margin-top: 12px; padding: 12px; border-radius: 8px; background:#fafafa; min-height:80px; }
+.translated { margin-top:8px; font-style: italic; color:#333; }
+.phrase-bank { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
+.phrase { padding:8px 10px; background:#eef; border-radius:8px; cursor:pointer; }
+.btn { padding:8px 12px; border: none; border-radius:6px; cursor:pointer; }
+.btn-primary { background:#3b82f6; color:white; }
+.btn-danger { background:#ef4444; color:white; }
+.small { font-size:0.9rem; color:#555; }
