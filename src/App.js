@@ -18,22 +18,24 @@ import LoginScreen from "./components/LoginScreen";
 import ToastContainer from "./components/ToastContainer";
 import LoadingScreen from "./components/LoadingScreen";
 
-console.log(process.env.FIREBASE_API)
-
 function App() {
   const [user, setUser] = useState(null);
   const [activePage, setActivePage] = useState("dashboard");
   const [toasts, setToasts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // -----------------------------
   // Toast system
+  // -----------------------------
   const addToast = useCallback((msg, type = "info", ttl = 3500) => {
     const id = Date.now() + Math.random();
     setToasts((t) => [...t, { id, msg, type }]);
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), ttl);
   }, []);
 
+  // -----------------------------
   // Auth listener + fetch role
+  // -----------------------------
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       if (u) {
@@ -44,7 +46,6 @@ function App() {
             const data = snap.data();
             setUser({ uid: u.uid, email: u.email, role: data.role || "user" });
           } else {
-            // create minimal profile if missing (safe)
             setUser({ uid: u.uid, email: u.email, role: "user" });
           }
         } catch (err) {
@@ -59,30 +60,61 @@ function App() {
     return unsub;
   }, []);
 
-  if (loading) return <LoadingScreen />;
-  if (!user) return <LoginScreen addToast={addToast} />;
-
+  // -----------------------------
+  // Logout handler
+  // -----------------------------
   const handleLogout = async () => {
     await signOut(auth);
     addToast("Logged out", "info");
   };
 
+  // -----------------------------
+  // Loading & Login
+  // -----------------------------
+  if (loading) return <LoadingScreen />;
+  if (!user) return <LoginScreen addToast={addToast} />;
+
+  // -----------------------------
+  // RBAC: admin-only pages
+  // -----------------------------
+  const renderPage = () => {
+    switch (activePage) {
+      case "dashboard":
+        return <DashboardHome />;
+      case "captions":
+        return <CaptioningPanel />;
+      case "recorder":
+        return <Recorder />;
+      case "signbank":
+        return <SignPhraseBank />;
+      case "community":
+        return <Community user={user} addToast={addToast} />;
+      case "profile":
+        return <Profile user={user} addToast={addToast} />;
+      case "admin":
+        return user?.role === "admin" ? (
+          <AdminDashboard user={user} addToast={addToast} />
+        ) : (
+          <section className="panel">
+            <h2>Access Denied</h2>
+            <p>You do not have permission to view this page.</p>
+          </section>
+        );
+      default:
+        return <DashboardHome />;
+    }
+  };
+
   return (
     <div className="app-root">
-      <Sidebar user={user} activePage={activePage} setActivePage={setActivePage} />
+      <Sidebar
+        user={user}
+        activePage={activePage}
+        setActivePage={setActivePage}
+      />
       <div className="main-area">
         <Header handleLogout={handleLogout} />
-        <main className="page-content">
-          {activePage === "dashboard" && <DashboardHome />}
-          {activePage === "captions" && <CaptioningPanel />}
-          {activePage === "recorder" && <Recorder />}
-          {activePage === "signbank" && <SignPhraseBank />}
-          {activePage === "community" && <Community user={user} addToast={addToast} />}
-          {activePage === "profile" && <Profile user={user} addToast={addToast} />}
-          {user?.role === "admin" && activePage === "admin" && (
-            <AdminDashboard user={user} addToast={addToast} />
-          )}
-        </main>
+        <main className="page-content">{renderPage()}</main>
       </div>
       <ToastContainer toasts={toasts} />
     </div>

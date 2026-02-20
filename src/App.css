@@ -5,7 +5,7 @@ body {
   background: linear-gradient(135deg, #c7d2fe, #e0f2fe, #f0f9ff);
   color: #1f2937;
   height: 100vh;
-  overflow: hidden;
+  overflow: auto;
 }
 
 /* ---------- DASHBOARD LAYOUT ---------- */
@@ -772,8 +772,11 @@ select {
 
 .table-container {
   overflow-x: auto;
+  overflow-y: auto; /* vertical scroll */
+  max-height: 400px; /* adjust as needed */
   margin-bottom: 25px;
 }
+
 
 .admin-table {
   width: 100%;

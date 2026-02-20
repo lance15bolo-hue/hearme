@@ -16,12 +16,20 @@ export default function Sidebar({ user, activePage, setActivePage }) {
       <h2 className="logo">HearMe</h2>
       <ul>
         {menu.map((m) => (
-          <li key={m.key} className={activePage === m.key ? "active" : ""} onClick={() => setActivePage(m.key)}>
+          <li
+            key={m.key}
+            className={activePage === m.key ? "active" : ""}
+            onClick={() => setActivePage(m.key)}
+          >
             {m.label}
           </li>
         ))}
+
         {user?.role === "admin" && (
-          <li className={activePage === "admin" ? "active" : ""} onClick={() => setActivePage("admin")}>
+          <li
+            className={activePage === "admin" ? "active" : ""}
+            onClick={() => setActivePage("admin")}
+          >
             🛠️ Admin
           </li>
         )}
