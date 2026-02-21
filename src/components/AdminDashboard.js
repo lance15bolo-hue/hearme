@@ -1,5 +1,5 @@
 // src/components/AdminDashboard.js
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   collection,
   getDocs,
@@ -29,7 +29,7 @@ export default function AdminDashboard({ user, addToast }) {
   const [postSearch, setPostSearch] = useState("");
   const [transcriptSearch, setTranscriptSearch] = useState("");
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const uSnap = await getDocs(collection(db, "users"));
@@ -78,11 +78,13 @@ export default function AdminDashboard({ user, addToast }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast]);
 
   useEffect(() => {
-    if (user) loadData();
-  }, [user]);
+    if (user) {
+      loadData();
+    }
+  }, [user, loadData]);
 
   const handleDeletePost = async (postId) => {
     if (!window.confirm("Delete this post?")) return;
