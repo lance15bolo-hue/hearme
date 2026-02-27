@@ -18,11 +18,16 @@ import LoginScreen from "./components/LoginScreen";
 import ToastContainer from "./components/ToastContainer";
 import LoadingScreen from "./components/LoadingScreen";
 
+import LandingPage from "./components/landingPage";
+
 function App() {
   const [user, setUser] = useState(null);
   const [activePage, setActivePage] = useState("dashboard");
   const [toasts, setToasts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Landing -> Login toggle (only when user is NOT logged in)
+  const [showAuth, setShowAuth] = useState(false);
 
   // -----------------------------
   // Toast system
@@ -69,10 +74,17 @@ function App() {
   };
 
   // -----------------------------
-  // Loading & Login
+  // Loading & Public (Landing/Login)
   // -----------------------------
   if (loading) return <LoadingScreen />;
-  if (!user) return <LoginScreen addToast={addToast} />;
+
+  if (!user) {
+    return showAuth ? (
+      <LoginScreen addToast={addToast} />
+    ) : (
+      <LandingPage onLogin={() => setShowAuth(true)} />
+    );
+  }
 
   // -----------------------------
   // RBAC: admin-only pages
@@ -107,15 +119,16 @@ function App() {
 
   return (
     <div className="app-root">
-      <Sidebar
-        user={user}
-        activePage={activePage}
-        setActivePage={setActivePage}
-      />
+      <Sidebar user={user} activePage={activePage} setActivePage={setActivePage} />
+
       <div className="main-area">
         <Header handleLogout={handleLogout} />
-        <main className="page-content">{renderPage()}</main>
+
+        <div className="content-wrapper">
+          <main className="page-content">{renderPage()}</main>
+        </div>
       </div>
+
       <ToastContainer toasts={toasts} />
     </div>
   );

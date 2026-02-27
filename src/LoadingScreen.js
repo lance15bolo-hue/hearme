@@ -1,7 +1,7 @@
 // src/components/LoadingScreen.js
 import React from "react";
 import "./LoadingScreen.css";
-import logo from "../assets/logohearme.png";
+import logo from "../assets/Logo_Hearme (2).png";
 
 export default function LoadingScreen() {
   return (

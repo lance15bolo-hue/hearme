@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { auth, db } from "../firebase";
+import "../App.css";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import logo from "../assets/LOGO_HearMe.png";
+import logo from "../assets/logohearme.png";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
