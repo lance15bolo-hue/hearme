@@ -17,12 +17,31 @@ export default function Community({ user, addToast }) {
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState("");
   const [posting, setPosting] = useState(false);
+  const [currentUserData, setCurrentUserData] = useState(null); // ✅ ADDED
   const textareaRef = useRef(null);
 
   const fallbackAvatar = useMemo(
     () => "https://via.placeholder.com/48?text=👤",
     []
   );
+
+  // ✅ LOAD CURRENT USER FIRESTORE DATA
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const loadUser = async () => {
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists()) {
+          setCurrentUserData(snap.data());
+        }
+      } catch (err) {
+        console.error("Failed loading user", err);
+      }
+    };
+
+    loadUser();
+  }, [user]);
 
   useEffect(() => {
     const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
@@ -67,6 +86,7 @@ export default function Community({ user, addToast }) {
       const postDoc = {
         uid: user.uid,
         name: ud.displayName || user.email.split("@")[0],
+        avatar: ud.photoData || null, // ✅ ADDED (performance improvement)
         text: newPost.trim(),
         likes: 0,
         createdAt: serverTimestamp(),
@@ -75,7 +95,6 @@ export default function Community({ user, addToast }) {
       const optimistic = {
         id: "temp-" + Date.now(),
         ...postDoc,
-        avatar: ud.photoData || null,
       };
 
       setPosts((ps) => [optimistic, ...ps]);
@@ -94,7 +113,6 @@ export default function Community({ user, addToast }) {
   };
 
   const handleLike = async (post) => {
-    // ignore optimistic/temp posts
     if (String(post.id).startsWith("temp-")) return;
 
     setPosts((ps) =>
@@ -136,8 +154,16 @@ export default function Community({ user, addToast }) {
         <div className="composer">
           <img
             className="post-avatar"
-            src={user?.photoData || fallbackAvatar}
+            src={
+              currentUserData?.photoData ||
+              user?.photoURL ||
+              fallbackAvatar
+            }
             alt="me"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = fallbackAvatar;
+            }}
           />
           <div className="composer-main">
             <textarea
@@ -148,7 +174,8 @@ export default function Community({ user, addToast }) {
               onChange={(e) => {
                 setNewPost(e.target.value);
                 e.target.style.height = "auto";
-                e.target.style.height = Math.min(e.target.scrollHeight, 220) + "px";
+                e.target.style.height =
+                  Math.min(e.target.scrollHeight, 220) + "px";
               }}
               rows={1}
               disabled={posting}
@@ -178,11 +205,17 @@ export default function Community({ user, addToast }) {
                 src={post.avatar ? post.avatar : fallbackAvatar}
                 alt={post.name}
                 className="post-avatar"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = fallbackAvatar;
+                }}
               />
               <div>
                 <div className="post-name">{post.name}</div>
                 <div className="post-meta">
-                  {post.createdAt?.toDate ? post.createdAt.toDate().toLocaleString() : ""}
+                  {post.createdAt?.toDate
+                    ? post.createdAt.toDate().toLocaleString()
+                    : ""}
                 </div>
               </div>
             </header>

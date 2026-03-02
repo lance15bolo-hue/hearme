@@ -128,3 +128,80 @@
   font-size: 15px;
   font-weight: 500;
 }
+
+/* ==============================
+   ✅ Academic Session UI (New)
+   ============================== */
+
+.academic-section {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+.academic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.academic-title {
+  margin: 0;
+  font-weight: 900;
+}
+
+.academic-badge {
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.22);
+}
+
+.academic-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.academic-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.academic-field label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.academic-field input {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  outline: none;
+  background: rgba(255, 255, 255, 0.95);
+  transition: 0.2s;
+}
+
+.academic-field input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+}
+
+.academic-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.academic-btn {
+  padding: 12px 16px;
+  border-radius: 14px;
+}

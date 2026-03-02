@@ -40,7 +40,7 @@ body{
     radial-gradient(800px 420px at 90% 12%, rgba(37,99,235,.22), transparent 60%),
     radial-gradient(800px 420px at 80% 90%, rgba(16,185,129,.14), transparent 60%),
     var(--bg);
-  overflow: hidden; /* app handles scroll in content */
+  overflow: auto; /* app handles scroll in content */
 }
 
 /* =========================================================
