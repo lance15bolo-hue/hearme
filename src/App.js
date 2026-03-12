@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useEffect, useState, useCallback } from "react";
 import "./App.css";
 import { auth, db } from "./firebase";
@@ -17,78 +16,81 @@ import AdminDashboard from "./components/AdminDashboard";
 import LoginScreen from "./components/LoginScreen";
 import ToastContainer from "./components/ToastContainer";
 import LoadingScreen from "./components/LoadingScreen";
-
-import LandingPage from "./components/landingPage";
+import LandingPage from "./components/LandingPage";
 
 function App() {
   const [user, setUser] = useState(null);
   const [activePage, setActivePage] = useState("dashboard");
   const [toasts, setToasts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [authMode, setAuthMode] = useState(null); // null | "login" | "signup"
 
-  // Landing -> Login toggle (only when user is NOT logged in)
-  const [showAuth, setShowAuth] = useState(false);
-
-  // -----------------------------
-  // Toast system
-  // -----------------------------
   const addToast = useCallback((msg, type = "info", ttl = 3500) => {
     const id = Date.now() + Math.random();
     setToasts((t) => [...t, { id, msg, type }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), ttl);
+    setTimeout(() => {
+      setToasts((t) => t.filter((x) => x.id !== id));
+    }, ttl);
   }, []);
 
-  // -----------------------------
-  // Auth listener + fetch role
-  // -----------------------------
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       if (u) {
         try {
           const docRef = doc(db, "users", u.uid);
           const snap = await getDoc(docRef);
+
           if (snap.exists()) {
             const data = snap.data();
-            setUser({ uid: u.uid, email: u.email, role: data.role || "user" });
+            setUser({
+              uid: u.uid,
+              email: u.email,
+              role: data.role || "user",
+            });
           } else {
-            setUser({ uid: u.uid, email: u.email, role: "user" });
+            setUser({
+              uid: u.uid,
+              email: u.email,
+              role: "user",
+            });
           }
         } catch (err) {
           console.error("Auth role fetch:", err);
-          setUser({ uid: u.uid, email: u.email, role: "user" });
+          setUser({
+            uid: u.uid,
+            email: u.email,
+            role: "user",
+          });
         }
       } else {
         setUser(null);
       }
+
       setLoading(false);
     });
+
     return unsub;
   }, []);
 
-  // -----------------------------
-  // Logout handler
-  // -----------------------------
   const handleLogout = async () => {
     await signOut(auth);
+    setAuthMode(null);
     addToast("Logged out", "info");
   };
 
-  // -----------------------------
-  // Loading & Public (Landing/Login)
-  // -----------------------------
   if (loading) return <LoadingScreen />;
 
   if (!user) {
-    return showAuth ? (
-      <LoginScreen addToast={addToast} />
+    return authMode ? (
+      <LoginScreen initialMode={authMode} />
     ) : (
-      <LandingPage onLogin={() => setShowAuth(true)} />
+      <LandingPage
+        onLogin={() => setAuthMode("login")}
+        onSignUp={() => setAuthMode("signup")}
+      />
     );
   }
 
-  // -----------------------------
-  // RBAC: admin-only pages
-  // -----------------------------
   const renderPage = () => {
     switch (activePage) {
       case "dashboard":
@@ -119,7 +121,11 @@ function App() {
 
   return (
     <div className="app-root">
-      <Sidebar user={user} activePage={activePage} setActivePage={setActivePage} />
+      <Sidebar
+        user={user}
+        activePage={activePage}
+        setActivePage={setActivePage}
+      />
 
       <div className="main-area">
         <Header handleLogout={handleLogout} />

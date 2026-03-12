@@ -8,12 +8,12 @@ import {
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import logo from "../assets/logohearme.png";
 
-export default function LoginScreen() {
+export default function LoginScreen({ initialMode = "login" }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-  const [isSignup, setIsSignup] = useState(false);
+  const [isSignup, setIsSignup] = useState(initialMode === "signup");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,7 +26,12 @@ export default function LoginScreen() {
           return;
         }
 
-        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        const userCred = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+
         await setDoc(doc(db, "users", userCred.user.uid), {
           email,
           createdAt: serverTimestamp(),
@@ -37,7 +42,6 @@ export default function LoginScreen() {
         await signInWithEmailAndPassword(auth, email, password);
       }
     } catch (err) {
-      // 🔹 Map Firebase errors to friendly messages
       let message = "Something went wrong. Please try again.";
 
       switch (err.code) {
@@ -73,6 +77,7 @@ export default function LoginScreen() {
       <div className="login-card">
         <img src={logo} alt="HearMe Logo" className="login-logo" />
         <h2>{isSignup ? "Create an Account" : "Welcome to HearMe"}</h2>
+
         <form onSubmit={handleSubmit}>
           <input
             type="email"
@@ -81,6 +86,7 @@ export default function LoginScreen() {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
+
           <input
             type="password"
             placeholder="Password"
@@ -88,6 +94,7 @@ export default function LoginScreen() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+
           {isSignup && (
             <input
               type="password"
@@ -97,11 +104,14 @@ export default function LoginScreen() {
               required
             />
           )}
+
           {error && <p className="error-text">{error}</p>}
+
           <button type="submit" className="btn start full">
             {isSignup ? "Sign Up" : "Login"}
           </button>
         </form>
+
         <p style={{ marginTop: "10px" }}>
           {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
           <span
