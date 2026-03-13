@@ -1,18 +1,19 @@
 import React, { useState } from "react";
+import { FaSignLanguage, FaPrayingHands, FaRedo, FaQuestion, FaSun } from 'react-icons/fa';
 
 export default function SignPhraseBank() {
   const phrases = [
-    { text: "Hello", sign: "🤟 Hello" },
-    { text: "Thank you", sign: "🙏 Thank you" },
-    { text: "Please repeat", sign: "↩️ Please repeat" },
-    { text: "I don't understand", sign: "❓ I don't understand" },
-    { text: "Good morning", sign: "🌅 Good morning" },
+    { text: "Hello", sign: <><FaSignLanguage /> Hello</> },
+    { text: "Thank you", sign: <><FaPrayingHands /> Thank you</> },
+    { text: "Please repeat", sign: <><FaRedo /> Please repeat</> },
+    { text: "I don't understand", sign: <><FaQuestion /> I don't understand</> },
+    { text: "Good morning", sign: <><FaSun /> Good morning</> },
   ];
   const [selected, setSelected] = useState(null);
 
   return (
     <section className="panel">
-      <h2>🤟 Sign Language Phrase Bank</h2>
+      <h2><FaSignLanguage /> Sign Language Phrase Bank</h2>
       <div className="phrases">
         {phrases.map((p, i) => (
           <button

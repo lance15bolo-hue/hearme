@@ -12,6 +12,7 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import { FaComment, FaPaperPlane, FaHeart } from 'react-icons/fa';
 
 export default function Community({ user, addToast }) {
   const [posts, setPosts] = useState([]);
@@ -21,7 +22,7 @@ export default function Community({ user, addToast }) {
   const textareaRef = useRef(null);
 
   const fallbackAvatar = useMemo(
-    () => "https://via.placeholder.com/48?text=👤",
+    () => "https://via.placeholder.com/48?text=U",
     []
   );
 
@@ -139,7 +140,7 @@ export default function Community({ user, addToast }) {
     <section className="panel community-panel">
       <div className="community-header">
         <div>
-          <h2 style={{ margin: 0 }}>💬 Community</h2>
+          <h2 style={{ margin: 0 }}><FaComment /> Community</h2>
           <p className="community-subtitle">
             Share updates, tips, and encouragement with other HearMe users.
           </p>
@@ -187,7 +188,7 @@ export default function Community({ user, addToast }) {
                 className="btn start"
                 disabled={posting || !newPost.trim()}
               >
-                {posting ? "Posting..." : "📤 Post"}
+                {posting ? "Posting..." : <><FaPaperPlane /> Post</>}
               </button>
             </div>
           </div>
@@ -229,7 +230,7 @@ export default function Community({ user, addToast }) {
                 onClick={() => handleLike(post)}
                 aria-label="Like post"
               >
-                <span className="heart">❤️</span>
+                <span className="heart"><FaHeart /></span>
                 <span className="like-count">{post.likes || 0}</span>
               </button>
             </footer>

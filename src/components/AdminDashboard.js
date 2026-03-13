@@ -10,6 +10,7 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import { FaWrench, FaChartBar, FaUsers, FaFileAlt } from 'react-icons/fa';
 import "./AdminDashboard.css";
 
 export default function AdminDashboard({ user, addToast }) {
@@ -151,7 +152,7 @@ export default function AdminDashboard({ user, addToast }) {
 
   return (
     <section className="panel">
-      <h2>🛠️ Admin Dashboard</h2>
+      <h2><FaWrench /> Admin Dashboard</h2>
 
       {/* EVERYTHING BELOW IS EXACTLY YOUR ORIGINAL CONTENT */}
 
@@ -171,7 +172,7 @@ export default function AdminDashboard({ user, addToast }) {
         </div>
       </div>
       {/* Posts Per Day Analytics */}
-      <h3 style={{ marginTop: "30px" }}>📊 Posts (Last 7 Days)</h3>
+      <h3 style={{ marginTop: "30px" }}><FaChartBar /> Posts (Last 7 Days)</h3>
           <div className="admin-stats">
             {Object.entries(stats.postsPerDay || {}).map(([date, count]) => (
           <div key={date} className="stat-card">
@@ -182,7 +183,7 @@ export default function AdminDashboard({ user, addToast }) {
           </div>
 
       {/* Users Table */}
-      <h3>👤 Users</h3>
+      <h3><FaUsers /> Users</h3>
       <input
         placeholder="Search users..."
         value={userSearch}
@@ -231,7 +232,7 @@ export default function AdminDashboard({ user, addToast }) {
       </div>
 
       {/* Posts Table */}
-      <h3>📝 Posts</h3>
+      <h3><FaFileAlt /> Posts</h3>
       <input
         placeholder="Search posts..."
         value={postSearch}
@@ -278,7 +279,7 @@ export default function AdminDashboard({ user, addToast }) {
       </div>
 
       {/* Transcripts Table */}
-      <h3>📝 Transcripts</h3>
+      <h3><FaFileAlt /> Transcripts</h3>
       <input
         placeholder="Search transcripts..."
         value={transcriptSearch}

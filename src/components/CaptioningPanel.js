@@ -1,13 +1,31 @@
 import React, { useState, useRef, useEffect } from "react";
 import { db } from "../firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import {
+  FaGraduationCap,
+  FaSave,
+  FaMicrophone,
+  FaStop,
+  FaPlay,
+  FaEraser,
+  FaHeadphones,
+  FaGlobe,
+} from "react-icons/fa";
 import "./CaptioningPanel.css";
 
 export default function CaptioningPanel({ user, addToast }) {
   const [listening, setListening] = useState(false);
+
+  // finalized text only
   const [caption, setCaption] = useState("");
+
+  // live preview of current in-progress speech
+  const [interimCaption, setInterimCaption] = useState("");
+
   const [translated, setTranslated] = useState("");
   const recognitionRef = useRef(null);
+  const shouldBeListeningRef = useRef(false);
+
   const [lang, setLang] = useState("en-US");
   const [targetLang, setTargetLang] = useState("tl");
 
@@ -17,9 +35,13 @@ export default function CaptioningPanel({ user, addToast }) {
   const [sessionDate, setSessionDate] = useState("");
   const [context, setContext] = useState("");
 
+  // combined visible caption
+  const fullCaption = `${caption} ${interimCaption}`.trim();
+
   useEffect(() => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
+
     if (!SpeechRecognition) {
       alert("Web Speech API not supported in this browser.");
       return;
@@ -30,49 +52,119 @@ export default function CaptioningPanel({ user, addToast }) {
     rec.interimResults = true;
     rec.lang = lang;
 
+    rec.onstart = () => {
+      setListening(true);
+    };
+
     rec.onresult = (ev) => {
-      let final = "";
-      for (let i = ev.resultIndex; i < ev.results.length; ++i) {
-        const res = ev.results[i];
-        if (res.isFinal) final += res[0].transcript;
+      let finalText = "";
+      let interimText = "";
+
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const transcript = ev.results[i][0].transcript;
+        if (ev.results[i].isFinal) {
+          finalText += transcript + " ";
+        } else {
+          interimText += transcript;
+        }
       }
-      if (final) setCaption((prev) => prev + " " + final);
+
+      if (finalText) {
+        setCaption((prev) => `${prev} ${finalText}`.trim());
+      }
+
+      setInterimCaption(interimText.trim());
+    };
+
+    rec.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+
+      // ignore harmless abort error when manually stopping
+      if (event.error !== "aborted") {
+        addToast?.(`Speech recognition error: ${event.error}`, "error");
+      }
+    };
+
+    rec.onend = () => {
+      setListening(false);
+
+      // auto-restart if user intended to keep listening
+      if (shouldBeListeningRef.current) {
+        try {
+          rec.start();
+        } catch (err) {
+          console.error("Speech recognition restart error:", err);
+        }
+      }
     };
 
     recognitionRef.current = rec;
-    return () => rec.stop();
-  }, [lang]);
+
+    // if language changes while actively listening, restart recognizer
+    if (shouldBeListeningRef.current) {
+      try {
+        rec.start();
+      } catch (err) {
+        console.error("Speech recognition start error after lang change:", err);
+      }
+    }
+
+    return () => {
+      shouldBeListeningRef.current = false;
+      try {
+        rec.stop();
+      } catch (err) {
+        console.error("Speech recognition cleanup error:", err);
+      }
+    };
+  }, [lang, addToast]);
 
   const toggleListen = () => {
     const rec = recognitionRef.current;
     if (!rec) return;
 
-    if (listening) {
-      rec.stop();
-      setListening(false);
+    if (shouldBeListeningRef.current) {
+      shouldBeListeningRef.current = false;
+      setInterimCaption("");
+      try {
+        rec.stop();
+      } catch (err) {
+        console.error("Speech recognition stop error:", err);
+      }
     } else {
+      // optional: clear on each new session
       setCaption("");
+      setInterimCaption("");
       setTranslated("");
-      rec.start();
-      setListening(true);
+
+      shouldBeListeningRef.current = true;
+      try {
+        rec.start();
+      } catch (err) {
+        console.error("Speech recognition start error:", err);
+        addToast?.("Unable to start microphone", "error");
+      }
     }
   };
 
   useEffect(() => {
-    if (!caption.trim()) return setTranslated("");
+    if (!fullCaption.trim()) {
+      setTranslated("");
+      return;
+    }
 
     const timer = setTimeout(async () => {
       if (targetLang === "taglish") {
-        const taglishText = await convertToTaglish(caption);
+        const taglishText = await convertToTaglish(fullCaption);
         setTranslated(taglishText);
       } else {
-        const result = await translateText(caption, targetLang);
+        const result = await translateText(fullCaption, targetLang);
         setTranslated(result);
       }
     }, 700);
 
     return () => clearTimeout(timer);
-  }, [caption, targetLang]);
+  }, [fullCaption, targetLang]);
 
   const saveSession = async () => {
     if (!subject || !instructor || !sessionDate) {
@@ -87,13 +179,13 @@ export default function CaptioningPanel({ user, addToast }) {
         instructor,
         sessionDate,
         context,
-        captions: caption,
+        captions: fullCaption,
         translated,
         languageOutput: targetLang,
         createdAt: serverTimestamp(),
       });
 
-      addToast && addToast("Academic session saved!", "success");
+      addToast?.("Academic session saved!", "success");
 
       setSubject("");
       setInstructor("");
@@ -101,16 +193,17 @@ export default function CaptioningPanel({ user, addToast }) {
       setContext("");
     } catch (err) {
       console.error("Save session error:", err);
-      addToast && addToast("Failed to save session", "error");
+      addToast?.("Failed to save session", "error");
     }
   };
 
   return (
     <section className="panel">
-      {/* ✅ Redesigned Academic Session UI (logic unchanged) */}
       <div className="academic-section">
         <div className="academic-header">
-          <h2 className="academic-title">🎓 Academic Session</h2>
+          <h2 className="academic-title">
+            <FaGraduationCap /> Academic Session
+          </h2>
           <span className="academic-badge">Session Info</span>
         </div>
 
@@ -154,20 +247,29 @@ export default function CaptioningPanel({ user, addToast }) {
 
         <div className="academic-actions">
           <button className="btn start academic-btn" onClick={saveSession}>
-            💾 Save Session
+            <FaSave /> Save Session
           </button>
         </div>
       </div>
 
-      {/* Live Captions Section (unchanged design/behavior) */}
-      <h2 style={{ marginTop: "25px" }}>🎤 Live Captions</h2>
+      <h2 style={{ marginTop: "25px" }}>
+        <FaMicrophone /> Live Captions
+      </h2>
 
       <div className="controls">
         <button
           className={listening ? "btn stop" : "btn start"}
           onClick={toggleListen}
         >
-          {listening ? "⏹ Stop Listening" : "▶ Start Listening"}
+          {listening ? (
+            <>
+              <FaStop /> Stop Listening
+            </>
+          ) : (
+            <>
+              <FaPlay /> Start Listening
+            </>
+          )}
         </button>
 
         <select value={lang} onChange={(e) => setLang(e.target.value)}>
@@ -192,17 +294,28 @@ export default function CaptioningPanel({ user, addToast }) {
           className="btn clear"
           onClick={() => {
             setCaption("");
+            setInterimCaption("");
             setTranslated("");
           }}
         >
-          🧹 Clear
+          <FaEraser /> Clear
         </button>
       </div>
 
-      <div className="caption-box scrollable">{caption || "🎧 Speak now..."}</div>
+      <div className="caption-box scrollable">
+        {fullCaption || (
+          <>
+            <FaHeadphones /> Speak now...
+          </>
+        )}
+      </div>
 
       <div className="translated-box">
-        {translated || "🌐 Translation will appear here"}
+        {translated || (
+          <>
+            <FaGlobe /> Translation will appear here
+          </>
+        )}
       </div>
     </section>
   );

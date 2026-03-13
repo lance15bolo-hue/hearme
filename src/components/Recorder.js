@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { FaMicrophoneAlt, FaStop, FaRecordVinyl } from 'react-icons/fa';
 
 export default function Recorder() {
   const [recording, setRecording] = useState(false);
@@ -34,12 +35,12 @@ export default function Recorder() {
 
   return (
     <section className="panel">
-      <h2>🎙️ Meeting Recorder</h2>
+      <h2><FaMicrophoneAlt /> Meeting Recorder</h2>
       <button
         className={recording ? "btn stop" : "btn start"}
         onClick={recording ? stopRecording : startRecording}
       >
-        {recording ? "⏹ Stop & Download" : "⏺ Start Recording"}
+        {recording ? <><FaStop /> Stop & Download</> : <><FaRecordVinyl /> Start Recording</>}
       </button>
       <p className="hint">
         Audio files will download automatically after recording.

@@ -9,6 +9,7 @@ import {
   collection,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import { FaUser } from 'react-icons/fa';
 
 // --- OPTIONAL: tiny helper to compress very large images before saving ---
 // This prevents huge base64 strings + slow UI when uploading high-res photos.
@@ -143,7 +144,7 @@ export default function Profile({ user, addToast }) {
     <section className="panel">
       <div className="profile-header">
         <div>
-          <h2 style={{ margin: 0 }}>👤 My Profile</h2>
+          <h2 style={{ margin: 0 }}><FaUser /> My Profile</h2>
           <p className="profile-subtitle">Manage your name and profile photo.</p>
         </div>
         <div className="profile-pill">
