@@ -31,7 +31,7 @@ export default function LandingPage({ onLogin, onSignUp }) {
         <svg viewBox="0 0 520 140" fill="none">
           <path
             d="M40 30H220M220 30C240 30 250 20 270 20H340M340 20H500"
-            stroke="rgba(80, 220, 255, 0.65)"
+            stroke="rgba(81, 220, 255, 0.65)"
             strokeWidth="6"
             strokeLinecap="round"
           />

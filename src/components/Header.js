@@ -5,7 +5,7 @@ export default function Header({ handleLogout }) {
     <header className="header">
       <h1>HearMe Dashboard</h1>
       <button className="logout-btn" onClick={handleLogout}>
-        🚪 Logout
+         Logout
       </button>
     </header>
   );
