@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import "./Landingpage.css";
+import "./LandingPage.css";
 
 export default function LandingPage({ onLogin, onSignUp }) {
   const scrollToHowItWorks = () => {
