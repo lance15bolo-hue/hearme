@@ -16,7 +16,7 @@ import AdminDashboard from "./components/AdminDashboard";
 import LoginScreen from "./components/LoginScreen";
 import ToastContainer from "./components/ToastContainer";
 import LoadingScreen from "./components/LoadingScreen";
-import LandingPage from "./components/landingPage";
+import LandingPage from "./components/LandingPage";
 
 function App() {
   const [user, setUser] = useState(null);
