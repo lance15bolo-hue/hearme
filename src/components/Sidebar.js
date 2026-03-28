@@ -14,7 +14,20 @@ export default function Sidebar({ user, activePage, setActivePage }) {
 
   return (
     <aside className="sidebar">
-      <h2 className="logo">HearMe</h2>
+      <h2
+  className="logo"
+  style={{
+    fontSize: "3.2rem",
+    fontWeight: "1000",
+    letterSpacing: "1.2px",
+    margin: "12px 0 20px",
+    textAlign: "center",
+    color: "#fff",
+    textShadow: "0 6px 18px rgba(0,0,0,0.35)"
+  }}
+>
+  HearMe
+</h2>
       <ul>
         {menu.map((m) => (
           <li
