@@ -191,7 +191,7 @@ export default function DashboardHome({ onNavigate }) {
       </ul>
     </div>
   </div>
-)}g
+)}
     </div>
   );
 }
