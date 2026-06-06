@@ -4,7 +4,6 @@ import {
   FaHome, FaMicrophone, FaHeadphones, FaHandPaper,
   FaComment, FaUser, FaWrench, FaCog, FaSun, FaMoon,
 } from "react-icons/fa";
-import HearMeLogo from "../assets/hearme_logo_4.png";
 
 export default function Sidebar({ user, activePage, setActivePage, theme, toggleTheme }) {
   const menu = [
