@@ -3,7 +3,6 @@ import {
   FaMicrophone,
   FaMicrophoneAlt,
   FaComment,
-  FaHandPaper,
   FaSignLanguage,
   FaArrowRight,
   FaBullhorn,
