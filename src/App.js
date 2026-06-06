@@ -5,6 +5,7 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
 import Sidebar from "./components/Sidebar";
+import Settings from "./components/Settings";
 import Header from "./components/Header";
 import DashboardHome from "./components/DashboardHome";
 import CaptioningPanel from "./components/CaptioningPanel";
@@ -23,7 +24,10 @@ function App() {
   const [activePage, setActivePage] = useState("dashboard");
   const [toasts, setToasts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [authMode, setAuthMode] = useState(null); // null | "login" | "signup"
+  const [authMode, setAuthMode] = useState(null);
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("hearme-theme") || "light"
+  );
 
   const addToast = useCallback((msg, type = "info", ttl = 3500) => {
     const id = Date.now() + Math.random();
@@ -34,31 +38,37 @@ function App() {
   }, []);
 
   useEffect(() => {
+    // Safety fallback — if loading never resolves, force it off after 8s
+    const fallback = setTimeout(() => {
+      setLoading(false);
+    }, 8000);
+
     const unsub = onAuthStateChanged(auth, async (u) => {
+      clearTimeout(fallback);
+
       if (u) {
         try {
+          // Race Firestore getDoc against a 5s timeout
           const docRef = doc(db, "users", u.uid);
-          const snap = await getDoc(docRef);
+          const snap = await Promise.race([
+            getDoc(docRef),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("Firestore timeout")), 5000)
+            ),
+          ]);
 
-          if (snap.exists()) {
-            const data = snap.data();
-            setUser({
-              uid: u.uid,
-              email: u.email,
-              role: data.role || "user",
-            });
-          } else {
-            setUser({
-              uid: u.uid,
-              email: u.email,
-              role: "user",
-            });
-          }
-        } catch (err) {
-          console.error("Auth role fetch:", err);
           setUser({
             uid: u.uid,
             email: u.email,
+            displayName: snap.exists() ? snap.data().displayName || null : null,
+            role: snap.exists() ? snap.data().role || "user" : "user",
+          });
+        } catch (err) {
+          console.warn("Firestore fetch failed, using defaults:", err.message);
+          setUser({
+            uid: u.uid,
+            email: u.email,
+            displayName: null,
             role: "user",
           });
         }
@@ -69,8 +79,18 @@ function App() {
       setLoading(false);
     });
 
-    return unsub;
+    return () => {
+      clearTimeout(fallback);
+      unsub();
+    };
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("hearme-theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () =>
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -94,47 +114,56 @@ function App() {
   const renderPage = () => {
     switch (activePage) {
       case "dashboard":
-        return <DashboardHome />;
+        return <DashboardHome setActivePage={setActivePage} />;
+
       case "captions":
-        return <CaptioningPanel />;
+        return <CaptioningPanel user={user} addToast={addToast} theme={theme} />;
+
       case "recorder":
-        return <Recorder />;
+        return <Recorder user={user} addToast={addToast} />;
+
       case "signbank":
-        return <SignPhraseBank />;
+        return <SignPhraseBank user={user} addToast={addToast} />;
+
       case "community":
         return <Community user={user} addToast={addToast} />;
+
       case "profile":
         return <Profile user={user} addToast={addToast} />;
+
       case "admin":
         return user?.role === "admin" ? (
-          <AdminDashboard user={user} addToast={addToast} />
+          <AdminDashboard user={user} addToast={addToast} theme={theme} />
         ) : (
           <section className="panel">
             <h2>Access Denied</h2>
             <p>You do not have permission to view this page.</p>
           </section>
         );
+
+      case "settings":
+        return <Settings theme={theme} toggleTheme={toggleTheme} />;
+
       default:
-        return <DashboardHome />;
+        return <DashboardHome setActivePage={setActivePage} />;
     }
   };
 
   return (
-    <div className="app-root">
+    <div className={`app-root ${theme === "dark" ? "dark-mode" : ""}`}>
       <Sidebar
         user={user}
         activePage={activePage}
         setActivePage={setActivePage}
+        theme={theme}
+        toggleTheme={toggleTheme}
       />
-
       <div className="main-area">
         <Header handleLogout={handleLogout} />
-
         <div className="content-wrapper">
           <main className="page-content">{renderPage()}</main>
         </div>
       </div>
-
       <ToastContainer toasts={toasts} />
     </div>
   );
