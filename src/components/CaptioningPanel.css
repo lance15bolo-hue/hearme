@@ -205,3 +205,33 @@
   padding: 12px 16px;
   border-radius: 14px;
 }
+.app-root.dark-mode .academic-section {
+  background: #1a2b22 !important;
+  border-color: rgba(255, 255, 255, 0.09) !important;
+}
+
+.app-root.dark-mode .academic-title {
+  color: #e2f5ec !important;
+}
+
+.app-root.dark-mode .academic-field label {
+  color: #8ab8a0 !important;
+}
+
+.app-root.dark-mode .academic-field input {
+  background: #162118 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #e2f5ec !important;
+  color-scheme: dark;
+}
+
+.app-root.dark-mode .academic-field input::placeholder {
+  color: #5a7a68 !important;
+}
+
+/* Session Info badge — match teal color */
+.academic-badge {
+  background: linear-gradient(135deg, #0f6e56, #1d9e75) !important;
+  color: #e1f5ee !important;
+  box-shadow: 0 10px 22px rgba(15, 110, 86, 0.3) !important;
+}
