@@ -175,7 +175,7 @@ export default function AdminDashboard({ user, addToast }) {
     }
   };
 
-  if (!user) return <p>Loading user...</p>;
+  if (!user) return null;
 
   if (user.role !== "admin") {
     return (
