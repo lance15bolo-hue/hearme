@@ -60,7 +60,7 @@ export default function LandingPage({ onLogin, onSignUp }) {
       </div>
 
       {/* Background logo watermark */}
-      <img src="/logohearme.png" alt="" className="landing-logo-bg" aria-hidden="true" />
+      <img src={require("../assets/Hearmelogo.png")} alt="" className="landing-logo-bg" aria-hidden="true" />
 
       {/* ── Hero ── */}
       <section className="landing-inner hero-section">
