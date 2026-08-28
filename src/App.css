@@ -2510,3 +2510,55 @@ table tr:hover td { background: #fafdfb; }
   color: var(--brand-dark);
   flex-shrink: 0;
 }
+
+/* =========================================================
+   MOBILE APP SHELL SCROLL FIX
+   ========================================================= */
+
+@media (max-width: 820px) {
+  html,
+  body,
+  #root {
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .app-root {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    flex-shrink: 0;
+  }
+
+  .main-area {
+    width: 100%;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .content-wrapper {
+    flex: none;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: visible;
+    padding: 18px;
+  }
+
+  .page-content {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+}

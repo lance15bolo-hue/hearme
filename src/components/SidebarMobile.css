@@ -1,0 +1,195 @@
+/* =========================================================
+   HEARME MOBILE SIDEBAR
+   ========================================================= */
+
+.sidebar-mobile-header {
+  display: none;
+}
+
+/* PHONE / TABLET */
+@media (max-width: 820px) {
+  .sidebar {
+    width: 100% !important;
+    min-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    flex-shrink: 0;
+  }
+
+  /* Compact top navigation */
+  .sidebar-mobile-header {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+    min-height: 64px;
+    box-sizing: border-box;
+
+    padding: 0 18px;
+
+    background: #071f17;
+
+    border-bottom:
+      1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .sidebar-mobile-brand {
+    color: #ffffff;
+
+    font-size: 23px;
+    font-weight: 900;
+
+    letter-spacing: -0.3px;
+  }
+
+  .sidebar-mobile-toggle {
+    width: 42px;
+    height: 42px;
+
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border:
+      1px solid rgba(255, 255, 255, 0.14);
+
+    border-radius: 11px;
+
+    background:
+      rgba(255, 255, 255, 0.06);
+
+    color: #8ce4bd;
+
+    font-size: 18px;
+
+    cursor: pointer;
+  }
+
+  .sidebar-mobile-toggle:hover {
+    background:
+      rgba(255, 255, 255, 0.11);
+  }
+
+  /* HIDE MENU BY DEFAULT */
+  .sidebar .sidebar-mobile-content {
+    display: none !important;
+  }
+
+  /* SHOW ONLY AFTER HAMBURGER IS PRESSED */
+  .sidebar.mobile-menu-open
+    .sidebar-mobile-content {
+    display: block !important;
+
+    width: 100%;
+
+    padding-bottom: 16px;
+
+    background: #071f17;
+  }
+
+  /*
+    Desktop brand is not needed
+    because HearMe already appears
+    in the mobile top bar.
+  */
+  .sidebar-mobile-content
+    .sidebar-brand {
+    display: none !important;
+  }
+
+  .sidebar-mobile-content
+    .sidebar-nav-label {
+    display: block;
+
+    padding: 18px 18px 6px;
+
+    margin: 0;
+  }
+
+  /* MENU GRID */
+  .sidebar-mobile-content
+    .sidebar-menu {
+    display: grid !important;
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 8px;
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 8px 14px 12px;
+
+    margin: 0;
+  }
+
+  .sidebar-mobile-content
+    .sidebar-menu li {
+    width: 100% !important;
+    min-width: 0;
+
+    min-height: 46px;
+
+    box-sizing: border-box;
+
+    margin: 0;
+
+    padding: 0 12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    gap: 9px;
+
+    border-radius: 11px;
+  }
+
+  .sidebar-mobile-content
+    .sidebar-menu li span {
+    white-space: normal;
+  }
+
+  /* USER */
+  .sidebar-mobile-content
+    .sidebar-user-card {
+    margin: 4px 14px 0;
+
+    width: calc(100% - 28px);
+
+    box-sizing: border-box;
+  }
+
+  /* THEME BUTTON */
+  .sidebar-mobile-content
+    .sidebar-theme-btn {
+    width: calc(100% - 28px);
+
+    margin: 10px 14px 0;
+
+    box-sizing: border-box;
+  }
+
+  /* QUOTE */
+  .sidebar-mobile-content
+    .sidebar-quote {
+    padding: 14px 18px 4px;
+
+    margin: 0;
+  }
+}
+
+/* VERY SMALL PHONE */
+@media (max-width: 430px) {
+  .sidebar-mobile-content
+    .sidebar-menu {
+    grid-template-columns: 1fr;
+  }
+}

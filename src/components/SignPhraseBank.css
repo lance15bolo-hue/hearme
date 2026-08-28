@@ -1,0 +1,377 @@
+.sign-bank-page {
+  padding: 28px;
+}
+
+.sign-bank-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.sign-bank-header h2 {
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sign-bank-subtitle {
+  margin: 0;
+  opacity: 0.75;
+  line-height: 1.6;
+}
+
+.search-wrap {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.search-wrap input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px 12px 42px;
+  border-radius: 12px;
+  border: 1px solid
+    rgba(255, 255, 255, 0.12);
+  background:
+    rgba(0, 0, 0, 0.18);
+  color: inherit;
+  outline: none;
+}
+
+.search-wrap input:focus {
+  border-color:
+    rgba(255, 255, 255, 0.3);
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.55;
+}
+
+.cat-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.cat-pill {
+  border: 1px solid
+    rgba(255, 255, 255, 0.12);
+  background:
+    rgba(255, 255, 255, 0.04);
+  color: inherit;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.cat-pill:hover {
+  background:
+    rgba(255, 255, 255, 0.08);
+}
+
+.cat-pill.active {
+  background:
+    rgba(255, 255, 255, 0.12);
+  font-weight: 600;
+}
+
+.phrase-count {
+  margin-bottom: 14px;
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.phrases-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.phrase-card {
+  min-height: 92px;
+  border: 1px solid
+    rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background:
+    rgba(0, 0, 0, 0.14);
+  color: inherit;
+  padding: 16px;
+  cursor: pointer;
+  text-align: left;
+
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.phrase-card:hover {
+  transform: translateY(-2px);
+  background:
+    rgba(255, 255, 255, 0.05);
+  border-color:
+    rgba(255, 255, 255, 0.2);
+}
+
+.phrase-card.active {
+  background:
+    rgba(255, 255, 255, 0.08);
+  border-color:
+    rgba(255, 255, 255, 0.3);
+}
+
+.phrase-card-name {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.phrase-card-filipino {
+  opacity: 0.82;
+  margin-bottom: 6px;
+}
+
+.phrase-card-category {
+  font-size: 0.8rem;
+  opacity: 0.55;
+}
+
+.sign-bank-hint {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 22px;
+  padding: 18px;
+  border-radius: 14px;
+
+  background:
+    rgba(255, 255, 255, 0.04);
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.08);
+}
+
+.sign-bank-hint svg {
+  font-size: 1.4rem;
+  opacity: 0.75;
+}
+
+.sign-bank-hint div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sign-bank-hint span {
+  opacity: 0.65;
+  font-size: 0.9rem;
+}
+
+.sign-detail {
+  margin-top: 24px;
+  padding: 22px;
+  border-radius: 16px;
+
+  background:
+    rgba(255, 255, 255, 0.04);
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.1);
+}
+
+.sign-detail-content {
+  display: grid;
+  grid-template-columns:
+    1fr 1.35fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.sign-category-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+
+  background:
+    rgba(255, 255, 255, 0.08);
+
+  margin-bottom: 12px;
+}
+
+.sign-detail-info h3 {
+  margin: 0 0 6px;
+  font-size: 1.45rem;
+}
+
+.sign-filipino {
+  margin: 0 0 18px;
+  opacity: 0.78;
+}
+
+.sign-description {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.6;
+  opacity: 0.7;
+}
+
+.sign-video-area {
+  min-height: 220px;
+}
+
+.sign-video-area video {
+  width: 100%;
+  height: 100%;
+  max-height: 320px;
+  border-radius: 14px;
+  object-fit: contain;
+  background: #000;
+}
+
+.sign-video-placeholder {
+  min-height: 220px;
+  height: 100%;
+  border-radius: 14px;
+
+  border: 1px dashed
+    rgba(255, 255, 255, 0.18);
+
+  background:
+    rgba(0, 0, 0, 0.12);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+  gap: 8px;
+  padding: 20px;
+}
+
+.sign-video-placeholder svg {
+  font-size: 2.5rem;
+  opacity: 0.45;
+}
+
+.sign-video-placeholder span {
+  opacity: 0.6;
+  font-size: 0.9rem;
+}
+
+.phrase-empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  opacity: 0.7;
+}
+
+.phrase-empty-state svg {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+/* Desktop uses bottom preview */
+.sign-mobile-preview {
+  display: none;
+}
+
+.sign-desktop-preview {
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .phrases-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .sign-detail-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .sign-bank-page {
+    padding: 18px;
+  }
+
+  /*
+    Mobile preview appears
+    BEFORE the phrase list.
+  */
+  .sign-mobile-preview {
+    display: block;
+    scroll-margin-top: 78px;
+    margin-bottom: 20px;
+  }
+
+  .sign-desktop-preview {
+    display: none;
+  }
+
+  .sign-mobile-preview
+    .sign-detail,
+  .sign-mobile-preview
+    .sign-bank-hint {
+    margin-top: 0;
+  }
+
+  .sign-detail {
+    padding: 18px;
+  }
+
+  .sign-detail-content {
+    gap: 16px;
+  }
+
+  .sign-video-area {
+    min-height: 180px;
+  }
+
+  .sign-video-placeholder {
+    min-height: 180px;
+  }
+
+  /*
+    Keep cards compact.
+    Two columns on normal phones.
+  */
+  .phrases-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .phrase-card {
+    min-height: 105px;
+    padding: 12px;
+  }
+
+  .phrase-card-name {
+    font-size: 0.9rem;
+  }
+
+  .phrase-card-filipino {
+    font-size: 0.82rem;
+  }
+
+  .phrase-card-category {
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 350px) {
+  .phrases-grid {
+    grid-template-columns: 1fr;
+  }
+}
