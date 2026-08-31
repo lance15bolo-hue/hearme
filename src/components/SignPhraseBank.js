@@ -171,8 +171,12 @@ export default function SignPhraseBank() {
                 src={
                   selectedPhrase.video
                 }
-                controls
+                autoPlay
+                muted
+                loop
                 playsInline
+                preload="metadata"
+                aria-label={`FSL reference for ${selectedPhrase.phrase}`}
               >
                 Your browser does not
                 support video playback.
@@ -340,10 +344,12 @@ export default function SignPhraseBank() {
         </div>
       )}
 
-      {/* DESKTOP SELECTED PREVIEW */}
-      <div className="sign-desktop-preview">
-        {renderPhraseDetail()}
-      </div>
+      {/* DESKTOP FLOATING SELECTED PREVIEW */}
+{selectedPhrase && (
+  <div className="sign-desktop-floating-preview">
+    {renderPhraseDetail("sign-floating-detail")}
+  </div>
+)}
 
     </section>
   );

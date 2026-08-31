@@ -235,3 +235,288 @@
   color: #e1f5ee !important;
   box-shadow: 0 10px 22px rgba(15, 110, 86, 0.3) !important;
 }
+
+/* =====================================
+   FLOATING LIVE-CAPTION FSL PLAYER
+   Keeps the detected FSL clip visible
+   without requiring page scrolling.
+===================================== */
+
+.panel:not(.sign-bank-page)
+  div:has(
+    > video[src*="/fsl-videos/"]
+  ) {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1200;
+
+  width: 230px;
+  padding: 14px;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+
+  background:
+    rgba(19, 48, 38, 0.97);
+
+  box-shadow:
+    0 18px 45px
+    rgba(0, 0, 0, 0.42);
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  pointer-events: none;
+}
+
+.panel:not(.sign-bank-page)
+  div:has(
+    > video[src*="/fsl-videos/"]
+  )
+  video {
+  width: auto !important;
+  height: 240px !important;
+
+  max-width: 100% !important;
+  max-height: 45vh !important;
+
+  margin: 0 auto !important;
+
+  object-fit: contain;
+  background: transparent;
+}
+
+/* Mobile floating interpreter box */
+@media (max-width: 600px) {
+  .panel:not(.sign-bank-page)
+    div:has(
+      > video[src*="/fsl-videos/"]
+    ) {
+    right: 12px;
+    bottom: 12px;
+
+    width: 185px;
+    padding: 11px;
+    border-radius: 14px;
+  }
+
+  .panel:not(.sign-bank-page)
+    div:has(
+      > video[src*="/fsl-videos/"]
+    )
+    video {
+    height: 205px !important;
+    max-height: 38vh !important;
+  }
+}
+
+/* =====================================
+   CAPTIONING UI REFINEMENT
+   Translation priority + compact FSL
+===================================== */
+
+/* Main translation display */
+.translation-primary {
+  margin-top: 16px;
+  padding: 18px 20px;
+
+  min-height: 92px;
+
+  border-radius: 14px;
+  border: 1px solid
+    rgba(29, 158, 117, 0.25);
+
+  background:
+    rgba(29, 158, 117, 0.08);
+
+  display: block;
+}
+
+.translation-primary-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-bottom: 10px;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+
+  color: #0f6e56;
+}
+
+.translation-primary-text {
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.55;
+
+  color: inherit;
+
+  overflow-wrap: anywhere;
+}
+
+.translation-primary-placeholder {
+  font-size: 17px;
+  line-height: 1.5;
+
+  opacity: 0.6;
+}
+
+
+/* Compact automatic FSL status */
+.fsl-detection-compact {
+  margin-top: 12px;
+
+  padding: 12px 14px;
+
+  border-radius: 12px;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.1);
+
+  background:
+    rgba(255, 255, 255, 0.035);
+}
+
+.fsl-detection-compact-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  font-size: 13px;
+  font-weight: 750;
+
+  opacity: 0.85;
+}
+
+.fsl-detection-compact-match {
+  margin-top: 9px;
+}
+
+.fsl-detection-compact-info {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+
+  gap: 5px 10px;
+}
+
+.fsl-detection-compact-label {
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 0.06em;
+
+  opacity: 0.5;
+}
+
+.fsl-detection-compact-info strong {
+  font-size: 16px;
+}
+
+.fsl-detection-compact-filipino {
+  font-size: 13px;
+
+  opacity: 0.7;
+}
+
+.fsl-detection-compact-empty {
+  margin-top: 7px;
+
+  font-size: 12px;
+  line-height: 1.45;
+
+  opacity: 0.55;
+}
+
+.fsl-detection-no-video {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-top: 9px;
+  padding: 9px 11px;
+
+  border-radius: 9px;
+
+  border: 1px dashed
+    rgba(255, 255, 255, 0.15);
+
+  opacity: 0.7;
+}
+
+.fsl-detection-no-video > svg {
+  flex-shrink: 0;
+
+  font-size: 20px;
+}
+
+.fsl-detection-no-video div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.fsl-detection-no-video strong {
+  font-size: 12px;
+}
+
+.fsl-detection-no-video span {
+  font-size: 11px;
+}
+
+
+/* Dark mode translation refinement */
+.app-root.dark-mode
+  .translation-primary {
+  background:
+    rgba(29, 158, 117, 0.1);
+
+  border-color:
+    rgba(29, 158, 117, 0.22);
+}
+
+.app-root.dark-mode
+  .translation-primary-label {
+  color: #5ed6ad;
+}
+
+
+/* Mobile */
+@media (max-width: 600px) {
+  .translation-primary {
+    margin-top: 12px;
+
+    padding: 15px 16px;
+
+    min-height: 82px;
+  }
+
+  .translation-primary-text {
+    font-size: 19px;
+    line-height: 1.5;
+  }
+
+  .translation-primary-placeholder {
+    font-size: 15px;
+  }
+
+  .fsl-detection-compact {
+    padding: 10px 12px;
+  }
+
+  .fsl-detection-compact-header {
+    font-size: 12px;
+  }
+
+  .fsl-detection-compact-info strong {
+    font-size: 15px;
+  }
+}

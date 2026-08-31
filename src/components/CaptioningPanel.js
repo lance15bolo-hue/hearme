@@ -27,7 +27,6 @@ import {
 } from "react-icons/fa";
 
 import { fslPhrases } from "./fslPhrases";
-
 import "./CaptioningPanel.css";
 
 export default function CaptioningPanel({
@@ -57,6 +56,11 @@ export default function CaptioningPanel({
     detectedFslPhrase,
     setDetectedFslPhrase,
   ] = useState(null);
+
+  const [
+    fslPlaybackQueue,
+    setFslPlaybackQueue,
+  ] = useState([]);
 
   const recognitionRef =
     useRef(null);
@@ -247,25 +251,59 @@ export default function CaptioningPanel({
     lastMatchKeyRef.current =
       matchKey;
 
-    setDetectedFslPhrase(
-      match.phrase
+    setFslPlaybackQueue(
+      (previousQueue) => [
+        ...previousQueue,
+        {
+          key: matchKey,
+          phrase: match.phrase,
+        },
+      ]
     );
+  }, [fullCaption]);
 
+  /*
+    Play detected FSL clips one at
+    a time in the order detected.
+  */
+  useEffect(() => {
     if (
-      fslClearTimerRef.current
+      detectedFslPhrase ||
+      fslPlaybackQueue.length === 0
     ) {
-      clearTimeout(
-        fslClearTimerRef.current
-      );
+      return;
     }
 
-    fslClearTimerRef.current =
-      setTimeout(() => {
-        setDetectedFslPhrase(
-          null
-        );
-      }, 6000);
-  }, [fullCaption]);
+    const [
+      nextItem,
+      ...remainingItems
+    ] = fslPlaybackQueue;
+
+    setDetectedFslPhrase(
+      nextItem
+    );
+
+    setFslPlaybackQueue(
+      remainingItems
+    );
+
+    /*
+      A phrase without a verified
+      video stays visible for six
+      seconds before the next item.
+    */
+    if (!nextItem.phrase.video) {
+      fslClearTimerRef.current =
+        setTimeout(() => {
+          setDetectedFslPhrase(
+            null
+          );
+        }, 6000);
+    }
+  }, [
+    detectedFslPhrase,
+    fslPlaybackQueue,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -373,6 +411,25 @@ export default function CaptioningPanel({
     inputMode,
   ]);
 
+  const resetFslPlayback = () => {
+    setDetectedFslPhrase(null);
+    setFslPlaybackQueue([]);
+
+    lastMatchKeyRef.current =
+      null;
+
+    if (
+      fslClearTimerRef.current
+    ) {
+      clearTimeout(
+        fslClearTimerRef.current
+      );
+
+      fslClearTimerRef.current =
+        null;
+    }
+  };
+
   const toggleListen = () => {
     const rec =
       recognitionRef.current;
@@ -401,20 +458,7 @@ export default function CaptioningPanel({
       setTranslated("");
       setTranslationStatus("");
 
-      setDetectedFslPhrase(
-        null
-      );
-
-      lastMatchKeyRef.current =
-        null;
-
-      if (
-        fslClearTimerRef.current
-      ) {
-        clearTimeout(
-          fslClearTimerRef.current
-        );
-      }
+      resetFslPlayback();
 
       shouldBeListeningRef.current =
         true;
@@ -441,23 +485,56 @@ export default function CaptioningPanel({
     setTranslated("");
     setTranslationStatus("");
 
-    setDetectedFslPhrase(
-      null
-    );
-
-    lastMatchKeyRef.current =
-      null;
+    resetFslPlayback();
 
     translationRequestRef.current++;
-
-    if (
-      fslClearTimerRef.current
-    ) {
-      clearTimeout(
-        fslClearTimerRef.current
-      );
-    }
   };
+
+  const handleDetectedFslVideoReady =
+    (event) => {
+      const video =
+        event.currentTarget;
+
+      video.muted = true;
+
+      const playRequest =
+        video.play();
+
+      if (
+        playRequest !== undefined
+      ) {
+        playRequest.catch(
+          (error) => {
+            console.warn(
+              "Detected FSL autoplay was blocked:",
+              error
+            );
+          }
+        );
+      }
+    };
+
+  const handleDetectedFslVideoEnd =
+    () => {
+      if (
+        fslClearTimerRef.current
+      ) {
+        clearTimeout(
+          fslClearTimerRef.current
+        );
+      }
+
+      /*
+        Short natural pause before
+        the next queued clip.
+      */
+      fslClearTimerRef.current =
+        setTimeout(() => {
+          setDetectedFslPhrase(
+            null
+          );
+        }, 350);
+    };
 
   const handleInputModeChange =
     (event) => {
@@ -486,6 +563,8 @@ export default function CaptioningPanel({
       setInterimCaption("");
       setTranslated("");
       setTranslationStatus("");
+
+      resetFslPlayback();
     };
 
   const saveSession =
@@ -763,7 +842,8 @@ export default function CaptioningPanel({
         <div
           style={{
             display: "flex",
-            alignItems: "flex-start",
+            alignItems:
+              "flex-start",
             gap: "9px",
             padding: "11px 13px",
             marginBottom: "14px",
@@ -831,38 +911,47 @@ export default function CaptioningPanel({
 
       </div>
 
-      <div className="caption-box scrollable">
-
+            <div className="caption-box scrollable">
         {fullCaption || (
           <>
             <FaHeadphones />
             Speak now...
           </>
         )}
-
       </div>
 
-      <div
-        style={{
-          marginTop: "18px",
-          padding: "18px",
-          borderRadius: "14px",
-          border:
-            "1px solid rgba(255,255,255,0.10)",
-          background:
-            "rgba(255,255,255,0.04)",
-        }}
-      >
+      {/* ==============================
+          TRANSLATION DISPLAY
+          Placed directly below captions
+         ============================== */}
+      <div className="translated-box translation-primary">
+        <div className="translation-primary-label">
+          <FaGlobe />
+          <span>Translation</span>
+        </div>
 
         <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            marginBottom: "12px",
-            fontWeight: "700",
-          }}
+          className={
+            translated
+              ? "translation-primary-text"
+              : "translation-primary-placeholder"
+          }
         >
+          {translated
+            ? translated
+            : translationStatus
+            ? translationStatus
+            : "Translation will appear here"}
+        </div>
+      </div>
+
+      {/* ==============================
+          COMPACT FSL DETECTION STATUS
+          Actual video remains handled by
+          the existing floating FSL player
+         ============================== */}
+      <div className="fsl-detection-compact">
+        <div className="fsl-detection-compact-header">
           <FaSignLanguage />
 
           <span>
@@ -871,140 +960,88 @@ export default function CaptioningPanel({
         </div>
 
         {detectedFslPhrase ? (
-          <div>
+          <div className="fsl-detection-compact-match">
+            <div className="fsl-detection-compact-info">
+              <span className="fsl-detection-compact-label">
+                MATCHED PHRASE
+              </span>
 
-            <div
-              style={{
-                fontSize: "12px",
-                opacity: "0.65",
-                marginBottom: "6px",
-              }}
-            >
-              MATCHED PHRASE
+              <strong>
+                {
+                  detectedFslPhrase
+                    .phrase.phrase
+                }
+              </strong>
+
+              <span className="fsl-detection-compact-filipino">
+                {
+                  detectedFslPhrase
+                    .phrase.filipino
+                }
+              </span>
             </div>
 
-            <div
-              style={{
-                fontSize: "20px",
-                fontWeight: "700",
-                marginBottom: "4px",
-              }}
-            >
-              {
-                detectedFslPhrase.phrase
-              }
-            </div>
-
-            <div
-              style={{
-                fontSize: "15px",
-                opacity: "0.8",
-                marginBottom: "12px",
-              }}
-            >
-              {
-                detectedFslPhrase.filipino
-              }
-            </div>
-
-            {detectedFslPhrase.video ? (
+            {detectedFslPhrase
+              .phrase.video ? (
               <video
                 key={
-                  detectedFslPhrase.video
+                  detectedFslPhrase.key
                 }
                 src={
-                  detectedFslPhrase.video
+                  detectedFslPhrase
+                    .phrase.video
                 }
-                controls
-                playsInline
+                autoPlay
                 muted
+                playsInline
+                preload="auto"
+                onCanPlay={
+                  handleDetectedFslVideoReady
+                }
+                onEnded={
+                  handleDetectedFslVideoEnd
+                }
                 style={{
-                  width: "100%",
-                  maxWidth: "500px",
+                  display: "block",
+                  width: "auto",
+                  height: "300px",
+                  maxWidth: "100%",
+                  maxHeight: "52vh",
+                  margin: "0 auto",
                   borderRadius: "12px",
-                  background: "#000",
+                  objectFit: "contain",
+                  background:
+                    "transparent",
                 }}
               >
                 Your browser does not
                 support video playback.
               </video>
             ) : (
-              <div
-                style={{
-                  padding: "20px",
-                  borderRadius: "12px",
-                  border:
-                    "1px dashed rgba(255,255,255,0.18)",
-                  textAlign: "center",
-                  opacity: "0.75",
-                }}
-              >
+              <div className="fsl-detection-no-video">
+                <FaPlayCircle />
 
-                <FaPlayCircle
-                  style={{
-                    fontSize: "28px",
-                    marginBottom: "8px",
-                  }}
-                />
+                <div>
+                  <strong>
+                    FSL video coming soon
+                  </strong>
 
-                <div
-                  style={{
-                    fontWeight: "700",
-                  }}
-                >
-                  FSL video coming soon
+                  <span>
+                    Supported video will
+                    appear automatically.
+                  </span>
                 </div>
-
-                <div
-                  style={{
-                    fontSize: "13px",
-                    marginTop: "4px",
-                  }}
-                >
-                  The supported FSL clip
-                  will automatically
-                  appear here.
-                </div>
-
               </div>
             )}
-
           </div>
         ) : (
-          <div
-            style={{
-              opacity: "0.65",
-              lineHeight: "1.5",
-            }}
-          >
-            No supported FSL phrase
-            detected right now. HearMe
-            will automatically display
-            the newest supported phrase.
+          <div className="fsl-detection-compact-empty">
+            No supported FSL phrase detected
+            right now. Supported phrases will
+            automatically play in the order
+            they are detected.
           </div>
         )}
-
-      </div>
-
-      <div className="translated-box">
-
-        {translated ? (
-          <>
-            <FaGlobe />
-            {translated}
-          </>
-        ) : translationStatus ? (
-          <>
-            <FaGlobe />
-            {translationStatus}
-          </>
-        ) : (
-          <>
-            <FaGlobe />
-            Translation will appear here
-          </>
-        )}
-
       </div>
 
     </section>
@@ -1044,19 +1081,11 @@ async function translateText(
   TAGLISH PIPELINE
 
   Taglish -> English -> Target
-
-  This avoids treating Taglish as
-  pure Tagalog when translating
-  into Filipino or Spanish.
 */
 async function translateTaglish(
   text,
   targetLang
 ) {
-  /*
-    First normalize mixed Taglish
-    into English.
-  */
   const english =
     await translateByCode(
       text,
@@ -1073,18 +1102,13 @@ async function translateTaglish(
     english
   );
 
-  /*
-    If English is the final target,
-    return the bridge result directly.
-  */
   if (targetLang === "en") {
     return english;
   }
 
-  /*
-    Experimental Taglish output.
-  */
-  if (targetLang === "taglish") {
+  if (
+    targetLang === "taglish"
+  ) {
     return convertEnglishToTaglish(
       english
     );
@@ -1099,17 +1123,11 @@ async function translateTaglish(
     return english;
   }
 
-  /*
-    English -> Filipino / Spanish
-  */
-  const finalTranslation =
-    await translateByCode(
-      english,
-      "en",
-      target
-    );
-
-  return finalTranslation;
+  return await translateByCode(
+    english,
+    "en",
+    target
+  );
 }
 
 /*
@@ -1123,9 +1141,7 @@ async function translateByCode(
   source,
   target
 ) {
-  if (
-    !text?.trim()
-  ) {
+  if (!text?.trim()) {
     return "";
   }
 
@@ -1255,19 +1271,127 @@ async function translateWithMyMemory(
   const data =
     await response.json();
 
-  const translatedText =
-    data?.responseData
-      ?.translatedText;
+  /*
+    Normalize the original caption
+    and the returned source segments
+    so punctuation and capitalization
+    do not affect exact comparison.
+  */
+  const normalizeSegment = (
+    value
+  ) => {
+    return String(value || "")
+      .toLowerCase()
+      .replace(
+        /[^a-z0-9áéíóúñü'\s]/gi,
+        " "
+      )
+      .replace(
+        /\s+/g,
+        " "
+      )
+      .trim();
+  };
 
-  if (
-    typeof translatedText ===
-      "string" &&
-    translatedText.trim()
-  ) {
+  const normalizedInput =
+    normalizeSegment(text);
+
+  const matches =
+    Array.isArray(data?.matches)
+      ? data.matches
+      : [];
+
+  /*
+    Prefer only a reliable entry whose
+    source segment exactly matches the
+    current live caption.
+
+    This prevents an unrelated stored
+    translation such as "Welcome to
+    Batangas" from being displayed.
+  */
+  const reliableExactMatches =
+    matches
+      .filter((item) => {
+        const segment =
+          normalizeSegment(
+            item?.segment
+          );
+
+        const translation =
+          typeof item?.translation ===
+            "string"
+            ? item.translation.trim()
+            : "";
+
+        const matchScore =
+          Number(item?.match) || 0;
+
+        const qualityScore =
+          Number(item?.quality) || 0;
+
+        return (
+          segment ===
+            normalizedInput &&
+          translation &&
+          matchScore >= 0.8 &&
+          qualityScore >= 70
+        );
+      })
+      .sort((first, second) => {
+        const matchDifference =
+          (Number(second?.match) ||
+            0) -
+          (Number(first?.match) ||
+            0);
+
+        if (matchDifference !== 0) {
+          return matchDifference;
+        }
+
+        return (
+          (Number(second?.quality) ||
+            0) -
+          (Number(first?.quality) ||
+            0)
+        );
+      });
+
+  const selectedMatch =
+    reliableExactMatches[0];
+
+  if (selectedMatch) {
+    console.log(
+      "MyMemory exact match selected:",
+      {
+        match:
+          selectedMatch.match,
+        quality:
+          selectedMatch.quality,
+        reference:
+          selectedMatch.reference,
+      }
+    );
+
     return decodeHtmlEntities(
-      translatedText
+      selectedMatch.translation
     ).trim();
   }
+
+  /*
+    Do not blindly use
+    responseData.translatedText.
+    It may contain an unrelated
+    translation-memory result.
+  */
+  console.warn(
+    "MyMemory result rejected: no reliable exact match.",
+    {
+      sourceLanguage,
+      targetLanguage,
+      text,
+    }
+  );
 
   return "";
 }
@@ -1275,8 +1399,6 @@ async function translateWithMyMemory(
 /*
   NON-TAGLISH INPUT
   -> TAGLISH OUTPUT
-
-  Experimental only.
 */
 async function convertToTaglish(
   text,
@@ -1298,12 +1420,6 @@ async function convertToTaglish(
   );
 }
 
-/*
-  SIMPLE TAGLISH OUTPUT
-
-  This is only a lightweight
-  experimental presentation layer.
-*/
 function convertEnglishToTaglish(
   english
 ) {
@@ -1340,11 +1456,6 @@ function inputModeToTranslationCode(
   const map = {
     "en-US": "en",
     "fil-PH": "tl",
-
-    /*
-      Taglish is handled separately
-      by translateTaglish().
-    */
     taglish: "tl",
   };
 
@@ -1468,12 +1579,18 @@ function findLatestFslMatch(
 function normalizeText(text) {
   return text
     .toLowerCase()
-    .replace(/[’‘]/g, "'")
+    .replace(
+      /[’‘]/g,
+      "'"
+    )
     .replace(
       /[^a-z0-9áéíóúñü'\s]/gi,
       " "
     )
-    .replace(/\s+/g, " ")
+    .replace(
+      /\s+/g,
+      " "
+    )
     .trim();
 }
 
