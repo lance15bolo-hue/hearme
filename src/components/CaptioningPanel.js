@@ -68,6 +68,9 @@ export default function CaptioningPanel({
   const shouldBeListeningRef =
     useRef(false);
 
+    const microphonePermissionDeniedRef =
+    useRef(false);
+
   const lastMatchKeyRef =
     useRef(null);
 
@@ -167,28 +170,47 @@ export default function CaptioningPanel({
     };
 
     rec.onerror = (event) => {
-      console.error(
-        "Speech recognition error:",
-        event.error
-      );
+  console.error(
+    "Speech recognition error:",
+    event.error
+  );
 
-      if (
-        event.error !== "aborted" &&
-        event.error !== "no-speech"
-      ) {
-        addToast?.(
-          `Speech recognition error: ${event.error}`,
-          "error"
-        );
-      }
-    };
+  if (
+    event.error === "not-allowed" ||
+    event.error === "service-not-allowed"
+  ) {
+    microphonePermissionDeniedRef.current =
+      true;
+
+    shouldBeListeningRef.current =
+      false;
+
+    addToast?.(
+      "Microphone permission is blocked. Please allow microphone access in your browser settings and try again.",
+      "error"
+    );
+
+    return;
+  }
+
+  if (
+    event.error !== "aborted" &&
+    event.error !== "no-speech"
+  ) {
+    addToast?.(
+      `Speech recognition error: ${event.error}`,
+      "error"
+    );
+  }
+};
 
     rec.onend = () => {
       setListening(false);
 
       if (
-        shouldBeListeningRef.current
-      ) {
+  shouldBeListeningRef.current &&
+  !microphonePermissionDeniedRef.current
+) {
         try {
           rec.start();
         } catch (error) {
@@ -453,6 +475,10 @@ export default function CaptioningPanel({
         );
       }
     } else {
+
+       microphonePermissionDeniedRef.current =
+         false;
+
       setCaption("");
       setInterimCaption("");
       setTranslated("");
