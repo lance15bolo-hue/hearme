@@ -237,79 +237,96 @@
 }
 
 /* =====================================
-   FLOATING LIVE-CAPTION FSL PLAYER
-   Keeps the detected FSL clip visible
-   without requiring page scrolling.
-===================================== */
+   FSL VIDEO FLOATING INSIDE CAPTION PANEL
+   ===================================== */
+
+.panel {
+  position: relative;
+}
+
 
 .panel:not(.sign-bank-page)
   div:has(
     > video[src*="/fsl-videos/"]
   ) {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  z-index: 1200;
 
-  width: 230px;
-  padding: 14px;
+  position: absolute;
 
-  border: 1px solid
-    rgba(255, 255, 255, 0.16);
-  border-radius: 16px;
+  top: 35px;
+
+  right: 18px;
+
+  z-index: 50;
+
+  width: 120px;
+
+  padding: 8px;
+
+  border-radius: 14px;
 
   background:
-    rgba(19, 48, 38, 0.97);
+    rgba(19,48,38,0.96);
+
+  border:
+    1px solid rgba(255,255,255,0.15);
 
   box-shadow:
-    0 18px 45px
-    rgba(0, 0, 0, 0.42);
-
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+    0 12px 30px rgba(0,0,0,0.35);
 
   pointer-events: none;
 }
+
 
 .panel:not(.sign-bank-page)
   div:has(
     > video[src*="/fsl-videos/"]
   )
   video {
-  width: auto !important;
-  height: 240px !important;
 
-  max-width: 100% !important;
-  max-height: 45vh !important;
+  width:100% !important;
 
-  margin: 0 auto !important;
+  height:150px !important;
 
-  object-fit: contain;
-  background: transparent;
+  max-height:none !important;
+
+  object-fit:contain;
+
+  border-radius:10px;
+
 }
 
-/* Mobile floating interpreter box */
-@media (max-width: 600px) {
+
+/* MOBILE */
+
+@media(max-width:600px){
+
   .panel:not(.sign-bank-page)
     div:has(
       > video[src*="/fsl-videos/"]
-    ) {
-    right: 12px;
-    bottom: 12px;
+    ){
 
-    width: 185px;
-    padding: 11px;
-    border-radius: 14px;
+    top:170px;
+
+    right:12px;
+
+    width:90px;
+
+    padding:6px;
+
   }
+
 
   .panel:not(.sign-bank-page)
     div:has(
       > video[src*="/fsl-videos/"]
     )
     video {
-    height: 205px !important;
-    max-height: 38vh !important;
+
+    height:100px !important;
+    object-fit:contain;
+
   }
+
 }
 
 /* =====================================

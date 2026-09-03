@@ -2562,3 +2562,100 @@ table tr:hover td { background: #fafdfb; }
     box-sizing: border-box;
   }
 }
+
+/* =========================================================
+   PROFILE RESPONSIVE REFINEMENT
+   ========================================================= */
+
+.profile-card.interactive {
+  max-width: 900px;
+}
+
+
+/* Desktop profile balance */
+
+.profile-left {
+  justify-content: center;
+}
+
+
+.profile-right {
+  text-align: left;
+}
+
+
+/* Better information grouping */
+
+.profile-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+
+/* MOBILE PROFILE */
+
+@media (max-width: 600px) {
+
+  .profile-card.interactive {
+
+    grid-template-columns: 1fr;
+
+    gap: 18px;
+
+    padding: 18px;
+
+    text-align: left;
+
+  }
+
+
+  .profile-left {
+
+    width:100%;
+
+    align-items:center;
+
+  }
+
+
+  .profile-right {
+
+    width:100%;
+
+    text-align:left;
+
+  }
+
+
+  .profile-field {
+
+    margin-bottom:14px;
+
+  }
+
+
+  .profile-mini-grid {
+
+    grid-template-columns:1fr;
+
+  }
+
+
+  .profile-value {
+
+    font-size:14px;
+
+  }
+
+
+  .profile-hint {
+
+    text-align:center;
+
+    max-width:220px;
+
+  }
+
+
+}
