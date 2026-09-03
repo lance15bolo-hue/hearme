@@ -1,7 +1,11 @@
 import React, { useEffect } from "react";
 import "./LandingPage.css";
 
-export default function LandingPage({ onLogin, onSignUp }) {
+export default function LandingPage({
+  onLogin,
+  onSignUp,
+  onGuest,
+}) {
   const scrollToHowItWorks = () => {
     const section = document.getElementById("how-it-works");
     if (section) section.scrollIntoView({ behavior: "smooth" });
@@ -32,9 +36,27 @@ export default function LandingPage({ onLogin, onSignUp }) {
           <span className="landing-navbar-name">HearMe</span>
         </div>
         <div className="landing-navbar-actions">
-          <button className="navbar-btn-login" onClick={onLogin}>Login</button>
-          <button className="navbar-btn-signup" onClick={onSignUp}>Get Started</button>
-        </div>
+  <button
+    className="navbar-btn-login"
+    onClick={onLogin}
+  >
+    Login
+  </button>
+
+  <button
+    className="navbar-btn-signup"
+    onClick={onSignUp}
+  >
+    Get Started
+  </button>
+
+  <button
+    className="navbar-btn-login"
+    onClick={onGuest}
+  >
+    Continue as Guest
+  </button>
+</div>
       </nav>
 
       {/* ── Decorative HUD lines ── */}
@@ -75,11 +97,35 @@ export default function LandingPage({ onLogin, onSignUp }) {
             text-to-speech, and real-time messaging support.
           </p>
 
-          <div className="landing-cta">
-            <button className="btn start" onClick={onSignUp}>Get Started</button>
-            <button className="btn clear" onClick={onLogin}>Login</button>
-            <button className="btn learn-more" onClick={scrollToHowItWorks}>Learn More</button>
-          </div>
+         <div className="landing-cta">
+  <button
+    className="btn start"
+    onClick={onSignUp}
+  >
+    Get Started
+  </button>
+
+  <button
+    className="btn clear"
+    onClick={onLogin}
+  >
+    Login
+  </button>
+
+  <button
+    className="btn clear"
+    onClick={onGuest}
+  >
+    Continue as Guest
+  </button>
+
+  <button
+    className="btn learn-more"
+    onClick={scrollToHowItWorks}
+  >
+    Learn More
+  </button>
+</div>
 
           <div
             className="scroll-indicator"
@@ -241,9 +287,27 @@ export default function LandingPage({ onLogin, onSignUp }) {
           <h2>Start communicating with fewer barriers today</h2>
           <p>Join HearMe and experience a more accessible way to connect with others.</p>
           <div className="landing-cta">
-            <button className="btn start" onClick={onSignUp}>Create Account</button>
-            <button className="btn clear" onClick={onLogin}>Login</button>
-          </div>
+  <button
+    className="btn start"
+    onClick={onSignUp}
+  >
+    Create Account
+  </button>
+
+  <button
+    className="btn clear"
+    onClick={onLogin}
+  >
+    Login
+  </button>
+
+  <button
+    className="btn clear"
+    onClick={onGuest}
+  >
+    Continue as Guest
+  </button>
+</div>
         </div>
       </section>
 

@@ -593,72 +593,103 @@ export default function CaptioningPanel({
       resetFslPlayback();
     };
 
-  const saveSession =
-    async () => {
-      if (
-        !subject ||
-        !instructor ||
-        !sessionDate
-      ) {
-        alert(
-          "Please fill in Subject, Instructor, and Date."
-        );
+ const saveSession = async () => {
 
-        return;
+  // Guest users cannot save transcript history
+  if (!user?.uid || user?.role === "guest") {
+
+    addToast?.(
+      "Please login to save transcript history.",
+      "info"
+    );
+
+    return;
+  }
+
+
+  if (
+    !subject ||
+    !instructor ||
+    !sessionDate
+  ) {
+
+    alert(
+      "Please fill in Subject, Instructor, and Date."
+    );
+
+    return;
+
+  }
+
+
+  try {
+
+    await addDoc(
+      collection(
+        db,
+        "academicSessions"
+      ),
+      {
+
+        userId:
+          user.uid,
+
+        subject,
+
+        instructor,
+
+        sessionDate,
+
+        context,
+
+        captions:
+          fullCaption,
+
+        translated,
+
+        inputMode,
+
+        languageOutput:
+          targetLang,
+
+        createdAt:
+          serverTimestamp(),
+
       }
+    );
 
-      try {
-        await addDoc(
-          collection(
-            db,
-            "academicSessions"
-          ),
-          {
-            userId:
-              user?.uid || null,
 
-            subject,
-            instructor,
-            sessionDate,
-            context,
+    addToast?.(
+      "Academic session saved!",
+      "success"
+    );
 
-            captions:
-              fullCaption,
 
-            translated,
+    setSubject("");
 
-            inputMode,
+    setInstructor("");
 
-            languageOutput:
-              targetLang,
+    setSessionDate("");
 
-            createdAt:
-              serverTimestamp(),
-          }
-        );
+    setContext("");
 
-        addToast?.(
-          "Academic session saved!",
-          "success"
-        );
 
-        setSubject("");
-        setInstructor("");
-        setSessionDate("");
-        setContext("");
-      } catch (error) {
-        console.error(
-          "Save session error:",
-          error
-        );
+  } catch (error) {
 
-        addToast?.(
-          "Failed to save session",
-          "error"
-        );
-      }
-    };
+    console.error(
+      "Save session error:",
+      error
+    );
 
+
+    addToast?.(
+      "Failed to save session",
+      "error"
+    );
+
+  }
+
+};
   const experimentalMode =
     inputMode === "taglish" ||
     targetLang === "taglish";
@@ -751,14 +782,24 @@ export default function CaptioningPanel({
 
         <div className="academic-actions">
 
-          <button
-            className="btn start academic-btn"
-            onClick={saveSession}
-          >
-            <FaSave />
-            Save Session
-          </button>
-
+        {user?.uid ? (
+  <button
+    className="btn start academic-btn"
+    onClick={saveSession}
+  >
+    <FaSave />
+    Save Session
+  </button>
+) : (
+  <button
+    className="btn academic-btn"
+    disabled
+    title="Login required to save sessions"
+  >
+    <FaSave />
+    Login to Save
+  </button>
+)}
         </div>
       </div>
 

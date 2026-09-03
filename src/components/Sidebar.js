@@ -7,6 +7,7 @@ import {
   FaHandPaper,
   FaComment,
   FaUser,
+  FaHistory,
   FaWrench,
   FaCog,
   FaSun,
@@ -26,6 +27,11 @@ export default function Sidebar({
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] =
     useState(false);
+
+
+  const isGuest =
+    user?.role === "guest";
+
 
   const menu = [
     {
@@ -53,31 +59,50 @@ export default function Sidebar({
       icon: <FaComment />,
       label: "Community",
     },
-    {
-      key: "profile",
-      icon: <FaUser />,
-      label: "Profile",
-    },
+
+    // Only logged-in users
+    ...(!isGuest
+      ? [
+          {
+            key: "profile",
+            icon: <FaUser />,
+            label: "Profile",
+          },
+          {
+            key: "history",
+            icon: <FaHistory />,
+            label: "History",
+          },
+        ]
+      : []),
   ];
 
+
   const initials =
-    user?.email?.[0]?.toUpperCase() ??
-    "U";
+    user?.displayName
+      ? user.displayName[0].toUpperCase()
+      : user?.email?.[0]?.toUpperCase() || "G";
+
 
   const displayName =
-    user?.email?.split("@")[0] ??
-    "User";
+    user?.displayName ||
+    (isGuest
+      ? "Guest User"
+      : user?.email?.split("@")[0] || "User");
+
 
   const role =
-    user?.role ?? "user";
+    user?.role || "user";
 
-  const handlePageChange = (
-    page
-  ) => {
+
+  const handlePageChange = (page) => {
+
     setActivePage(page);
 
     setMobileMenuOpen(false);
+
   };
+
 
   return (
     <aside
@@ -87,12 +112,13 @@ export default function Sidebar({
           : "sidebar"
       }
     >
-      {/* MOBILE HEADER */}
+
       <div className="sidebar-mobile-header">
 
         <div className="sidebar-mobile-brand">
           HearMe
         </div>
+
 
         <button
           type="button"
@@ -108,19 +134,22 @@ export default function Sidebar({
               : "Open menu"
           }
         >
+
           {mobileMenuOpen ? (
             <FaTimes />
           ) : (
             <FaBars />
           )}
+
         </button>
 
       </div>
 
-      {/* COLLAPSIBLE CONTENT */}
+
+
       <div className="sidebar-mobile-content">
 
-        {/* BRAND */}
+
         <div className="sidebar-brand">
 
           <div className="sidebar-brand-logo-row">
@@ -131,105 +160,129 @@ export default function Sidebar({
 
           </div>
 
+
           <p className="sidebar-tagline">
+
             Breaking Barriers.
             <br />
 
             <strong>
               Building Connections.
             </strong>
+
           </p>
+
 
         </div>
 
-        {/* NAV LABEL */}
+
+
         <div className="sidebar-nav-label">
           MAIN MENU
         </div>
 
-        {/* NAVIGATION */}
+
+
         <ul className="sidebar-menu">
 
+
           {menu.map((item) => (
+
             <li
               key={item.key}
               className={
-                activePage ===
-                item.key
+                activePage === item.key
                   ? "active"
                   : ""
               }
               onClick={() =>
-                handlePageChange(
-                  item.key
-                )
+                handlePageChange(item.key)
               }
             >
+
               {item.icon}
 
               <span>
                 {item.label}
               </span>
+
             </li>
+
           ))}
 
-          {user?.role ===
-            "admin" && (
+
+
+          {user?.role === "admin" && (
+
             <li
               className={
-                activePage ===
-                "admin"
+                activePage === "admin"
                   ? "active"
                   : ""
               }
               onClick={() =>
-                handlePageChange(
-                  "admin"
-                )
+                handlePageChange("admin")
               }
             >
+
               <FaWrench />
 
               <span>
                 Admin
               </span>
+
             </li>
+
           )}
+
+
 
           <li
             className={
-              activePage ===
-              "settings"
+              activePage === "settings"
                 ? "active"
                 : ""
             }
             onClick={() =>
-              handlePageChange(
-                "settings"
-              )
+              handlePageChange("settings")
             }
           >
+
             <FaCog />
 
             <span>
               Settings
             </span>
+
           </li>
+
 
         </ul>
 
-        {/* USER CARD */}
+
+
+
         <div className="sidebar-user-card">
 
+
           <div className="sidebar-user-avatar">
+
             {initials}
+
           </div>
+
+
 
           <div className="sidebar-user-info">
 
+
             <span className="sidebar-user-name">
+
               {displayName}
+
             </span>
+
+
 
             <span className="sidebar-user-status">
 
@@ -239,43 +292,64 @@ export default function Sidebar({
 
             </span>
 
+
           </div>
+
+
 
           <span
             className={`sidebar-role-badge role-${role}`}
           >
-            {role
-              .charAt(0)
-              .toUpperCase() +
-              role.slice(1)}
+
+            {
+              role
+                .charAt(0)
+                .toUpperCase() +
+              role.slice(1)
+            }
+
           </span>
+
+
 
         </div>
 
-        {/* THEME */}
+
+
+
         <button
           className="sidebar-theme-btn"
           onClick={toggleTheme}
         >
+
           {theme === "dark" ? (
             <FaSun />
           ) : (
             <FaMoon />
           )}
 
+
           {theme === "dark"
             ? "Light Mode"
             : "Dark Mode"}
+
         </button>
 
-        {/* QUOTE */}
+
+
         <div className="sidebar-quote">
+
           "Empowering every voice." 💚
           <br />
           Enriching every life.
+
         </div>
 
+
+
       </div>
+
+
     </aside>
   );
 }
