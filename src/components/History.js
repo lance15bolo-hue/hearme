@@ -4,7 +4,7 @@ import {
   query,
   where,
   orderBy,
-  getDocs,
+  onSnapshot,
 } from "firebase/firestore";
 
 import { db } from "../firebase";
@@ -17,56 +17,50 @@ function History({ user }) {
 
   useEffect(() => {
 
-    const fetchHistory = async () => {
-
-      // Guest protection
-      if (!user || user.role === "guest" || !user.uid) {
-        setSessions([]);
-        setLoading(false);
-        return;
-      }
+    if (!user || user.role === "guest" || !user.uid) {
+      setSessions([]);
+      setLoading(false);
+      return;
+    }
 
 
-      try {
-
-        const q = query(
-          collection(db, "academicSessions"),
-          where("userId", "==", user.uid),
-          orderBy("createdAt", "desc")
-        );
+    const q = query(
+      collection(db, "academicSessions"),
+      where("userId", "==", user.uid),
+      orderBy("createdAt", "desc")
+    );
 
 
-        const querySnapshot = await getDocs(q);
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
 
-
-        const historyData =
-          querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
+        const historyData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
 
 
         setSessions(historyData);
+        setLoading(false);
 
+      },
 
-      } catch (error) {
+      (error) => {
 
         console.error(
           "Error loading history:",
           error
         );
 
-
-      } finally {
-
         setLoading(false);
 
       }
+    );
 
-    };
 
+    return () => unsubscribe();
 
-    fetchHistory();
 
   }, [user]);
 
@@ -106,7 +100,6 @@ function History({ user }) {
 
 
 
-
   return (
 
     <div className="history-container">
@@ -114,7 +107,6 @@ function History({ user }) {
       <h2>
         Transcript History
       </h2>
-
 
 
       {sessions.length === 0 ? (
@@ -160,14 +152,12 @@ function History({ user }) {
 
             >
 
-
               <h3>
                 {session.subject}
               </h3>
 
 
               <p>
-
                 <strong>
                   Instructor:
                 </strong>{" "}
@@ -175,7 +165,6 @@ function History({ user }) {
                 {session.instructor}
 
               </p>
-
 
 
               <p>
@@ -193,12 +182,9 @@ function History({ user }) {
 
           ))}
 
-
         </div>
 
       )}
-
-
 
 
 
@@ -232,16 +218,17 @@ function History({ user }) {
 
 
           <p>
+
             <strong>
               Transcript:
             </strong>
+
           </p>
 
 
           <p>
             {selectedSession.captions}
           </p>
-
 
 
 
@@ -261,7 +248,6 @@ function History({ user }) {
               <p>
                 {selectedSession.translated}
               </p>
-
 
             </>
 

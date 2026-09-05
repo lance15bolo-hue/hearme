@@ -236,93 +236,124 @@
   box-shadow: 0 10px 22px rgba(15, 110, 86, 0.3) !important;
 }
 
-/* =====================================
-   FSL VIDEO FLOATING INSIDE CAPTION PANEL
-   ===================================== */
+/* FSL FLOATING VIDEO */
 
-.panel {
-  position: relative;
+.panel:not(.sign-bank-page)
+div:has(
+  > video[src*="/fsl-videos/"]
+){
+
+  width:220px;
+
+  padding:10px;
+
+  border-radius:18px;
+
+  z-index:50;
+
 }
 
 
 .panel:not(.sign-bank-page)
-  div:has(
-    > video[src*="/fsl-videos/"]
-  ) {
-
-  position: absolute;
-
-  top: 35px;
-
-  right: 18px;
-
-  z-index: 50;
-
-  width: 120px;
-
-  padding: 8px;
-
-  border-radius: 14px;
-
-  background:
-    rgba(19,48,38,0.96);
-
-  border:
-    1px solid rgba(255,255,255,0.15);
-
-  box-shadow:
-    0 12px 30px rgba(0,0,0,0.35);
-
-  pointer-events: none;
-}
-
-
-.panel:not(.sign-bank-page)
-  div:has(
-    > video[src*="/fsl-videos/"]
-  )
-  video {
+div:has(
+  > video[src*="/fsl-videos/"]
+)
+video{
 
   width:100% !important;
 
-  height:150px !important;
-
-  max-height:none !important;
+  height:260px !important;
 
   object-fit:contain;
 
-  border-radius:10px;
+  border-radius:12px;
 
 }
 
 
-/* MOBILE */
+/* DESKTOP FSL FLOATING VIDEO */
+
+.panel:not(.sign-bank-page)
+div:has(
+  > video[src*="/fsl-videos/"]
+){
+
+  position: fixed;
+
+  top: 140px;
+
+  right: 40px;
+
+  width: 220px;
+
+  padding: 10px;
+
+  background: #16382f;
+
+  border: 1px solid rgba(120, 220, 180, 0.25);
+
+  border-radius: 18px;
+
+  overflow: hidden;
+
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+
+  z-index:9999;
+
+}
+
+
+.panel:not(.sign-bank-page)
+div:has(
+  > video[src*="/fsl-videos/"]
+)
+video{
+
+  width:100% !important;
+
+  height:260px !important;
+
+  object-fit:contain;
+
+  border-radius:12px;
+
+}
+
+
+/* MOBILE FSL FLOATING VIDEO */
 
 @media(max-width:600px){
 
   .panel:not(.sign-bank-page)
-    div:has(
-      > video[src*="/fsl-videos/"]
-    ){
+  div:has(
+    > video[src*="/fsl-videos/"]
+  ){
 
-    top:170px;
+    position: fixed;
 
-    right:12px;
+    top:280px;
 
-    width:90px;
+    right:10px;
 
-    padding:6px;
+    width:150px;
+
+    padding:8px;
+
+    border-radius:16px;
+
+    z-index:9999;
 
   }
 
 
   .panel:not(.sign-bank-page)
-    div:has(
-      > video[src*="/fsl-videos/"]
-    )
-    video {
+  div:has(
+    > video[src*="/fsl-videos/"]
+  )
+  video{
 
-    height:100px !important;
+    height:180px !important;
+
     object-fit:contain;
 
   }
