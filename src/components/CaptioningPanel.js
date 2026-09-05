@@ -75,10 +75,13 @@ export default function CaptioningPanel({
     useRef(null);
 
   const fslClearTimerRef =
-    useRef(null);
+  useRef(null);
 
-  const translationRequestRef =
-    useRef(0);
+const silenceTimerRef =
+  useRef(null);
+
+const translationRequestRef =
+  useRef(0);
 
   const [inputMode, setInputMode] =
     useState("en-US");
@@ -135,39 +138,57 @@ export default function CaptioningPanel({
     };
 
     rec.onresult = (event) => {
-      let finalText = "";
-      let interimText = "";
+  let finalText = "";
+  let interimText = "";
 
-      for (
-        let i = event.resultIndex;
-        i < event.results.length;
-        i++
-      ) {
-        const transcript =
-          event.results[i][0].transcript;
+  for (
+    let i = event.resultIndex;
+    i < event.results.length;
+    i++
+  ) {
+    const transcript =
+      event.results[i][0].transcript.trim();
 
-        if (
-          event.results[i].isFinal
-        ) {
-          finalText +=
-            transcript + " ";
-        } else {
-          interimText +=
-            transcript;
-        }
-      }
+    if (
+      event.results[i].isFinal
+    ) {
+      finalText += transcript + " ";
+    } else {
+      interimText += transcript + " ";
+    }
+  }
 
-      if (finalText) {
-        setCaption(
-          (previous) =>
-            `${previous} ${finalText}`.trim()
+  if (finalText.trim()) {
+    setCaption((previous) => {
+      const updatedText =
+        `${previous} ${finalText}`.trim();
+
+      const words =
+        updatedText.split(/\s+/);
+
+      const cleanedWords =
+        words.filter(
+          (word, index) =>
+            word.toLowerCase() !==
+            words[index - 1]?.toLowerCase()
         );
-      }
 
-      setInterimCaption(
-        interimText.trim()
-      );
-    };
+      return cleanedWords.join(" ");
+    });
+        if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+    }
+
+   silenceTimerRef.current = setTimeout(() => {
+  setCaption("");
+  setInterimCaption("");
+}, 3000);
+  }
+
+  setInterimCaption(
+    interimText.trim()
+  );
+};
 
     rec.onerror = (event) => {
   console.error(
@@ -344,10 +365,8 @@ export default function CaptioningPanel({
   */
   useEffect(() => {
     if (!fullCaption.trim()) {
-      setTranslated("");
-      setTranslationStatus("");
-      return;
-    }
+  return;
+}
 
     const requestId =
       ++translationRequestRef.current;
