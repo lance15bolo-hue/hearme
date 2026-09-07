@@ -5,6 +5,8 @@ import { auth, db } from "./firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
+import { RecordingProvider } from "./context/RecordingContext";
+
 import Sidebar from "./components/Sidebar";
 import Settings from "./components/Settings";
 import Header from "./components/Header";
@@ -474,6 +476,8 @@ function App() {
 
   return (
 
+    <RecordingProvider>
+
     <div
       className={
         `app-root ${
@@ -483,6 +487,7 @@ function App() {
         }`
       }
     >
+    
 
 
       <Sidebar
@@ -538,6 +543,7 @@ function App() {
 
     </div>
 
+    </RecordingProvider>
   );
 
 }

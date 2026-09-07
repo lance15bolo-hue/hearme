@@ -9,6 +9,7 @@ import {
   storage,
 } from "../firebase";
 
+import { useRecording } from "../context/RecordingContext";
 
 import {
   addDoc,
@@ -44,6 +45,14 @@ export default function CaptioningPanel({
   user,
   addToast,
 }) {
+
+const {
+  isRecording,
+  startRecording,
+  stopRecording,
+  recordingUrl,
+} = useRecording();
+
   const [listening, setListening] =
     useState(false);
 
@@ -131,7 +140,7 @@ const recordingChunksRef =
 const [, setIsRecording] =
   useState(false);
 
-const [, setRecordingUrl] =
+const [sessionRecordingUrl, setSessionRecordingUrl] =
   useState("");
 
   /*
@@ -496,7 +505,7 @@ const [, setRecordingUrl] =
     }
   };
 
-  const startRecording = async () => {
+  const startLocalRecording = async () => {
   try {
     const stream =
       await navigator.mediaDevices.getUserMedia({
@@ -552,7 +561,7 @@ const [, setRecordingUrl] =
       );
 
 
-    setRecordingUrl(downloadUrl);
+setSessionRecordingUrl(downloadUrl);
 
 
     console.log(
@@ -600,24 +609,6 @@ const [, setRecordingUrl] =
 };
 
 
-const stopRecording = () => {
-
-  if (
-    mediaRecorderRef.current &&
-    mediaRecorderRef.current.state !== "inactive"
-  ) {
-
-    mediaRecorderRef.current.stop();
-
-  }
-
-  setIsRecording(false);
-
-  console.log(
-    "Recording stopped"
-  );
-};
-
   const toggleListen = () => {
     const rec =
       recognitionRef.current;
@@ -657,7 +648,7 @@ const stopRecording = () => {
       shouldBeListeningRef.current =
   true;
 
-startRecording();
+startLocalRecording();
 
 try {
   rec.start();
@@ -815,6 +806,9 @@ try {
 
   translated,
 
+  recordingUrl:
+    recordingUrl || "",
+
   inputMode,
 
   languageOutput:
@@ -952,9 +946,29 @@ try {
 
         <div className="academic-actions">
 
-        {user?.uid ? (
+       <div className="recording-controls">
+
   <button
-    className="btn start academic-btn"
+    className="btn_academic-btn"
+    onClick={
+      isRecording
+        ? stopRecording
+        : startRecording
+    }
+  >
+    {
+      isRecording
+        ? "Stop Recording"
+        : "Start Recording"
+    }
+  </button>
+
+</div>
+
+
+{user?.uid ? (
+  <button
+    className="btn_academic-btn"
     onClick={saveSession}
   >
     <FaSave />
@@ -962,7 +976,7 @@ try {
   </button>
 ) : (
   <button
-    className="btn academic-btn"
+    className="btn_academic-btn"
     disabled
     title="Login required to save sessions"
   >
