@@ -4,13 +4,24 @@ import React, {
   useEffect,
 } from "react";
 
-import { db } from "../firebase";
+import {
+  db,
+  storage,
+} from "../firebase";
+
 
 import {
   addDoc,
   collection,
   serverTimestamp,
 } from "firebase/firestore";
+
+
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
 
 import {
   FaGraduationCap,
@@ -108,6 +119,19 @@ const translationRequestRef =
     getSpeechRecognitionLanguage(
       inputMode
     );
+
+    // Recording states
+const [isRecording, setIsRecording] =
+  useState(false);
+
+const [recordingUrl, setRecordingUrl] =
+  useState("");
+
+const mediaRecorderRef =
+  useRef(null);
+
+const recordingChunksRef =
+  useRef([]);
 
   /*
     SPEECH RECOGNITION
@@ -471,22 +495,146 @@ const translationRequestRef =
     }
   };
 
+  const startRecording = async () => {
+  try {
+    const stream =
+      await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
+
+    recordingChunksRef.current = [];
+
+    const recorder =
+      new MediaRecorder(stream);
+
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        recordingChunksRef.current.push(
+          event.data
+        );
+      }
+    };
+
+    recorder.onstop = async () => {
+
+  const audioBlob =
+    new Blob(
+      recordingChunksRef.current,
+      {
+        type: "audio/webm",
+      }
+    );
+
+
+  try {
+
+    const fileName =
+      `recordings/hearme_${Date.now()}.webm`;
+
+
+    const storageRef =
+      ref(
+        storage,
+        fileName
+      );
+
+
+    await uploadBytes(
+      storageRef,
+      audioBlob
+    );
+
+
+    const downloadUrl =
+      await getDownloadURL(
+        storageRef
+      );
+
+
+    setRecordingUrl(downloadUrl);
+
+
+    console.log(
+      "Recording uploaded:",
+      downloadUrl
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Recording upload failed:",
+      error
+    );
+
+  }
+
+
+  stream
+    .getTracks()
+    .forEach(
+      (track) =>
+        track.stop()
+    );
+
+};
+
+    mediaRecorderRef.current =
+      recorder;
+
+    recorder.start();
+
+    setIsRecording(true);
+
+    console.log(
+      "Recording started"
+    );
+
+  } catch (error) {
+    console.error(
+      "Recording start error:",
+      error
+    );
+  }
+};
+
+
+const stopRecording = () => {
+
+  if (
+    mediaRecorderRef.current &&
+    mediaRecorderRef.current.state !== "inactive"
+  ) {
+
+    mediaRecorderRef.current.stop();
+
+  }
+
+  setIsRecording(false);
+
+  console.log(
+    "Recording stopped"
+  );
+};
+
   const toggleListen = () => {
     const rec =
       recognitionRef.current;
 
     if (!rec) return;
 
-    if (
-      shouldBeListeningRef.current
-    ) {
-      shouldBeListeningRef.current =
-        false;
+   if (
+  shouldBeListeningRef.current
+) {
+  shouldBeListeningRef.current =
+    false;
 
-      setInterimCaption("");
+  stopRecording();
 
-      try {
-        rec.stop();
+  setInterimCaption("");
+
+  try {
+    rec.stop();
       } catch (error) {
         console.error(
           "Speech recognition stop error:",
@@ -506,10 +654,12 @@ const translationRequestRef =
       resetFslPlayback();
 
       shouldBeListeningRef.current =
-        true;
+  true;
 
-      try {
-        rec.start();
+startRecording();
+
+try {
+  rec.start();
       } catch (error) {
         console.error(
           "Speech recognition start error:",
@@ -649,32 +799,32 @@ const translationRequestRef =
         "academicSessions"
       ),
       {
+  userId: user.uid,
 
-        userId:
-          user.uid,
+  subject,
 
-        subject,
+  instructor,
 
-        instructor,
+  sessionDate,
 
-        sessionDate,
+  context,
 
-        context,
+  captions:
+    fullCaption,
 
-        captions:
-          fullCaption,
+  translated,
 
-        translated,
+  inputMode,
 
-        inputMode,
+  languageOutput:
+    targetLang,
 
-        languageOutput:
-          targetLang,
+  sessionStatus:
+    "completed",
 
-        createdAt:
-          serverTimestamp(),
-
-      }
+  createdAt:
+    serverTimestamp(),
+}
     );
 
 

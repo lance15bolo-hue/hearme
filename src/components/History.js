@@ -3,13 +3,13 @@ import {
   collection,
   query,
   where,
-  orderBy,
   onSnapshot,
 } from "firebase/firestore";
 
 import { db } from "../firebase";
 
 function History({ user }) {
+
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,10 +24,12 @@ function History({ user }) {
     }
 
 
+    console.log("Current user UID:", user.uid);
+
+
     const q = query(
       collection(db, "academicSessions"),
-      where("userId", "==", user.uid),
-      orderBy("createdAt", "desc")
+      where("userId", "==", user.uid)
     );
 
 
@@ -39,6 +41,12 @@ function History({ user }) {
           id: doc.id,
           ...doc.data(),
         }));
+
+
+        console.log(
+          "History loaded:",
+          historyData
+        );
 
 
         setSessions(historyData);
@@ -69,30 +77,14 @@ function History({ user }) {
   if (loading) {
 
     return (
-      <div>
-        <h2>Transcript History</h2>
-        <p>Loading history...</p>
-      </div>
-    );
-
-  }
-
-
-
-  if (!user || user.role === "guest") {
-
-    return (
       <div className="history-container">
-
         <h2>
-          Transcript History
+          Academic Session History
         </h2>
 
         <p>
-          History is available for registered users only.
-          Please login to save and view your transcripts.
+          Loading sessions...
         </p>
-
       </div>
     );
 
@@ -105,82 +97,95 @@ function History({ user }) {
     <div className="history-container">
 
       <h2>
-        Transcript History
+        Academic Session History
       </h2>
 
 
-      {sessions.length === 0 ? (
 
-        <p>
-          No saved transcript sessions found.
-        </p>
+      {selectedSession && (
 
-      ) : (
+        <div
+          className="history-details"
+          style={{
+            border: "1px solid #555",
+            padding: "20px",
+            borderRadius: "12px",
+            marginBottom: "25px",
+          }}
+        >
 
-        <div>
-
-          {sessions.map((session) => (
-
-            <div
-
-              key={session.id}
-
-              className="history-card"
-
-              onClick={() =>
-                setSelectedSession(session)
-              }
+          <h3>
+            Selected Session
+          </h3>
 
 
-              style={{
-
-                cursor: "pointer",
-
-                border:
-                  "1px solid #ddd",
-
-                padding:
-                  "15px",
-
-                marginBottom:
-                  "10px",
-
-                borderRadius:
-                  "8px",
-
-              }}
-
-            >
-
-              <h3>
-                {session.subject}
-              </h3>
+          <p>
+            <strong>
+              Subject:
+            </strong>{" "}
+            {selectedSession.subject || "N/A"}
+          </p>
 
 
-              <p>
-                <strong>
-                  Instructor:
-                </strong>{" "}
-
-                {session.instructor}
-
-              </p>
+          <p>
+            <strong>
+              Instructor:
+            </strong>{" "}
+            {selectedSession.instructor || "N/A"}
+          </p>
 
 
-              <p>
-
-                <strong>
-                  Date:
-                </strong>{" "}
-
-                {session.sessionDate}
-
-              </p>
+          <p>
+            <strong>
+              Date:
+            </strong>{" "}
+            {selectedSession.sessionDate || "N/A"}
+          </p>
 
 
-            </div>
+          <p>
+            <strong>
+              Context:
+            </strong>{" "}
+            {selectedSession.context || "N/A"}
+          </p>
 
-          ))}
+
+          <hr />
+
+
+          <h4>
+            Caption Transcript
+          </h4>
+
+
+          <p>
+            {selectedSession.captions ||
+              "No caption available."}
+          </p>
+
+
+
+          <h4>
+            Translation
+          </h4>
+
+
+          <p>
+            {selectedSession.translated ||
+              "No translation available."}
+          </p>
+
+
+
+          <p>
+            <strong>
+              Status:
+            </strong>{" "}
+            {selectedSession.sessionStatus ||
+              "Completed"}
+          </p>
+
 
         </div>
 
@@ -188,73 +193,77 @@ function History({ user }) {
 
 
 
-      {selectedSession && (
 
-        <div
-
-          className="history-details"
-
-          style={{
-
-            marginTop:
-              "20px",
-
-            padding:
-              "15px",
-
-            border:
-              "1px solid #ccc",
-
-            borderRadius:
-              "8px",
-
-          }}
-
-        >
-
-          <h3>
-            {selectedSession.subject}
-          </h3>
-
-
-          <p>
-
-            <strong>
-              Transcript:
-            </strong>
-
-          </p>
-
-
-          <p>
-            {selectedSession.captions}
-          </p>
+      <h3>
+        Saved Sessions
+      </h3>
 
 
 
-          {selectedSession.translated && (
+      {sessions.length === 0 ? (
 
-            <>
+        <p>
+          No saved sessions found.
+        </p>
 
-              <p>
+      ) : (
 
-                <strong>
-                  Translation:
-                </strong>
+        sessions.map((session) => (
 
-              </p>
+          <div
+
+            key={session.id}
+
+            className="history-card"
+
+            onClick={() =>
+              setSelectedSession(session)
+            }
+
+            style={{
+              cursor: "pointer",
+              border: "1px solid #555",
+              padding: "15px",
+              marginBottom: "12px",
+              borderRadius: "10px",
+            }}
+
+          >
+
+            <h3>
+              {session.subject ||
+                "Untitled Session"}
+            </h3>
 
 
-              <p>
-                {selectedSession.translated}
-              </p>
+            <p>
+              <strong>
+                Instructor:
+              </strong>{" "}
+              {session.instructor || "N/A"}
+            </p>
 
-            </>
 
-          )}
+            <p>
+              <strong>
+                Date:
+              </strong>{" "}
+              {session.sessionDate || "N/A"}
+            </p>
 
 
-        </div>
+            <p>
+              <strong>
+                Status:
+              </strong>{" "}
+              {session.sessionStatus ||
+                "Completed"}
+            </p>
+
+
+          </div>
+
+        ))
 
       )}
 
