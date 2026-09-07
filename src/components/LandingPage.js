@@ -32,7 +32,7 @@ export default function LandingPage({
       {/* ── Sticky navbar — scrolls with you ── */}
       <nav className="landing-navbar">
         <div className="landing-navbar-logo">
-          <div className="landing-navbar-icon">👂</div>
+
           <span className="landing-navbar-name">HearMe</span>
         </div>
         <div className="landing-navbar-actions">
