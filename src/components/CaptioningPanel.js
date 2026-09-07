@@ -121,17 +121,18 @@ const translationRequestRef =
     );
 
     // Recording states
-const [isRecording, setIsRecording] =
-  useState(false);
-
-const [recordingUrl, setRecordingUrl] =
-  useState("");
-
 const mediaRecorderRef =
   useRef(null);
 
 const recordingChunksRef =
   useRef([]);
+
+
+const [, setIsRecording] =
+  useState(false);
+
+const [, setRecordingUrl] =
+  useState("");
 
   /*
     SPEECH RECOGNITION
