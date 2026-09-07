@@ -140,7 +140,7 @@ const recordingChunksRef =
 const [, setIsRecording] =
   useState(false);
 
-const [sessionRecordingUrl, setSessionRecordingUrl] =
+const [, setSessionRecordingUrl] =
   useState("");
 
   /*
