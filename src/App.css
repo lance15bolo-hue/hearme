@@ -2054,49 +2054,60 @@ table tr:hover td { background: #fafdfb; }
 
 
 /* =========================================================
-   BACK BUTTON
+   LOGIN BACK BUTTON
    ========================================================= */
 
-.back-button {
+.login-page .back-button {
 
-  position:absolute;
+  position: absolute;
 
-  top:30px;
+  top: 22px;
 
-  left:30px;
+  left: 26px;
+
+  transform: none;
+
+  background: rgba(255,255,255,0.08);
+
+  border: 1px solid rgba(255,255,255,0.35);
+
+  color: white;
+
+  padding: 10px 18px;
+
+  border-radius: 12px;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  z-index: 9999;
+
+  backdrop-filter: blur(10px);
+
+}
 
 
-  background:rgba(255,255,255,0.12);
+.login-page .back-button:hover {
 
-  border:1px solid rgba(255,255,255,0.25);
-
-
-  color:white;
-
-
-  padding:10px 18px;
-
-  border-radius:12px;
-
-
-  font-size:14px;
-
-  font-weight:600;
-
-
-  cursor:pointer;
-
-  transition:0.2s ease;
+  opacity:0.85;
 
 }
 
 
-.back-button:hover {
+.history-details-container .history-back-button:hover {
 
-  background:rgba(255,255,255,0.22);
+  opacity:0.85;
 
 }
 
+.history-details-container .back-button:hover {
+
+  opacity:0.85;
+
+}
 
 
 /* =========================================================
@@ -2139,7 +2150,7 @@ table tr:hover td { background: #fafdfb; }
   }
 
 
-  .back-button {
+ .history-details-container .back-button {
 
     top:18px;
 
@@ -2149,7 +2160,7 @@ table tr:hover td { background: #fafdfb; }
 
     font-size:13px;
 
-  }
+}
 
 }
 
@@ -2985,39 +2996,3 @@ table tr:hover td { background: #fafdfb; }
 
 }
 
-.back-button {
-  position: absolute;
-  top: 30px;
-  left: 30px;
-
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255,255,255,0.35);
-
-  color: white;
-
-  padding: 10px 18px;
-  border-radius: 12px;
-
-  font-size: 14px;
-  font-weight: 600;
-
-  cursor: pointer;
-  transition: 0.2s ease;
-}
-
-.back-button:hover {
-  background: rgba(255,255,255,0.25);
-}
-
-
-@media (max-width: 768px) {
-
-  .back-button {
-    top: 20px;
-    left: 20px;
-
-    padding: 8px 14px;
-    font-size: 13px;
-  }
-
-}

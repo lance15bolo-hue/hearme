@@ -22,6 +22,7 @@ import ToastContainer from "./components/ToastContainer";
 import LoadingScreen from "./components/LoadingScreen";
 import LandingPage from "./components/LandingPage";
 import History from "./components/History";
+import HistoryDetails from "./components/HistoryDetails";
 
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
 
   const [activePage, setActivePage] = useState("dashboard");
   const [toasts, setToasts] = useState([]);
+  const [selectedHistory, setSelectedHistory] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [authMode, setAuthMode] = useState(null);
@@ -332,15 +334,27 @@ function App() {
 
 
 
-      case "history":
+    case "history":
 
-        return (
+return (
+  <History
+    user={activeUser}
+    setActivePage={setActivePage}
+    setSelectedHistory={setSelectedHistory}
+  />
+);
 
-          <History
-            user={activeUser}
-          />
 
-        );
+case "historyDetails":
+
+return (
+
+  <HistoryDetails
+    session={selectedHistory}
+    setActivePage={setActivePage}
+  />
+
+);
 
 
 
@@ -547,6 +561,8 @@ function App() {
   );
 
 }
+
+
 
 
 
