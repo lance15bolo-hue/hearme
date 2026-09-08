@@ -29,6 +29,7 @@ function App() {
 
   const [user, setUser] = useState(null);
   const [guestMode, setGuestMode] = useState(false);
+  const [returnToGuest, setReturnToGuest] = useState(false);
 
   const [activePage, setActivePage] = useState("dashboard");
   const [toasts, setToasts] = useState([]);
@@ -271,9 +272,19 @@ function App() {
 
     return authMode ? (
 
-      <LoginScreen
-        initialMode={authMode}
-      />
+    <LoginScreen
+  initialMode={authMode}
+  onBack={() => {
+
+    setAuthMode(null);
+
+    if (returnToGuest) {
+      setGuestMode(true);
+      setActivePage("captions");
+    }
+
+  }}
+/>
 
     ) : (
 
@@ -322,13 +333,19 @@ function App() {
 
           <CaptioningPanel
 
-            user={activeUser}
+  user={activeUser}
 
-            addToast={addToast}
+  addToast={addToast}
 
-            theme={theme}
+  theme={theme}
 
-          />
+  onLoginRequest={() => {
+  setReturnToGuest(true);
+  setGuestMode(false);
+  setAuthMode("login");
+}}
+
+/>
 
         );
 

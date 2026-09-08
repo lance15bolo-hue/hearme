@@ -8,7 +8,10 @@ import {
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import logo from "../assets/logohearme.png";
 
-export default function LoginScreen({ initialMode = "login" }) {
+export default function LoginScreen({
+  initialMode = "login",
+  onBack,
+}) {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -100,11 +103,11 @@ export default function LoginScreen({ initialMode = "login" }) {
     <div className="login-page">
 
       <button
-        className="back-button"
-        onClick={() => window.location.href = "/"}
-      >
-        ← Back
-      </button>
+  className="back-button"
+  onClick={onBack}
+>
+  ← Back
+</button>
 
 
       <div className="login-card">

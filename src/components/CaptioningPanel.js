@@ -44,6 +44,7 @@ import "./CaptioningPanel.css";
 export default function CaptioningPanel({
   user,
   addToast,
+  onLoginRequest,
 }) {
 
 const {
@@ -142,6 +143,48 @@ const [, setIsRecording] =
 
 const [, setSessionRecordingUrl] =
   useState("");
+
+  useEffect(() => {
+
+  const savedSession =
+    sessionStorage.getItem(
+      "hearme_pending_session"
+    );
+
+
+  if (savedSession) {
+
+    const data =
+      JSON.parse(savedSession);
+
+
+    setSubject(
+      data.subject || ""
+    );
+
+    setInstructor(
+      data.instructor || ""
+    );
+
+    setSessionDate(
+      data.sessionDate || ""
+    );
+
+    setContext(
+      data.context || ""
+    );
+
+    setCaption(
+      data.caption || ""
+    );
+
+    setTranslated(
+      data.translated || ""
+    );
+
+  }
+
+}, []);
 
   /*
     SPEECH RECOGNITION
@@ -976,13 +1019,30 @@ try {
   </button>
 ) : (
   <button
-    className="btn_academic-btn"
-    disabled
-    title="Login required to save sessions"
-  >
-    <FaSave />
-    Login to Save
-  </button>
+  className="btn_academic-btn"
+  onClick={() => {
+
+  sessionStorage.setItem(
+    "hearme_pending_session",
+    JSON.stringify({
+      subject,
+      instructor,
+      sessionDate,
+      context,
+      caption,
+      translated,
+      recordingUrl
+    })
+  );
+
+  onLoginRequest();
+
+}}
+  title="Login required to save sessions"
+>
+  <FaSave />
+  Login to Save
+</button>
 )}
         </div>
       </div>

@@ -1477,6 +1477,7 @@ select:focus {
 .community-page { display: flex; flex-direction: column; gap: 14px; }
 
 .post-form {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1484,23 +1485,23 @@ select:focus {
   background: #f8fcfa;
   border: 1px solid var(--hm-border);
   border-radius: 18px;
-  padding: 14px;
+  padding: 14px 20px;
 }
 
 .post-textarea {
   width: 100%;
-  min-height: 76px;
-  max-height: 200px;
-  padding: 11px 14px;
+  min-height: 120px;
+  max-height: 220px;
+  padding: 14px;
   background: var(--surface-2);
   border: 0.5px solid #d8e5de;
   border-radius: var(--r-lg);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text);
   outline: none;
-  resize: none;
+  resize: vertical;
   line-height: 1.55;
-  transition: border-color 0.12s;
+  box-sizing: border-box;
 }
 
 .post-textarea:focus {
@@ -1511,7 +1512,11 @@ select:focus {
 
 .post-textarea::placeholder { color: var(--muted-2); }
 
-.post-controls { display: flex; justify-content: flex-end; }
+.post-controls {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+}
 
 .posts-grid {
   display: grid;
@@ -1544,9 +1549,10 @@ select:focus {
 }
 
 .post-avatar {
-  width: 30px;
-  height: 30px;
-  min-width: 30px;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: var(--brand-tint);
   display: flex;
@@ -1558,6 +1564,27 @@ select:focus {
   object-fit: cover;
   overflow: hidden;
   border: 0.5px solid #d8e5de;
+  margin-bottom: 0;
+}
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+}
+
+.composer-main {
+  width: 100%;
+
+  flex: 1;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 6px;
+
 }
 
 .post-name  { font-size: 12px; font-weight: 600; color: var(--text); }
