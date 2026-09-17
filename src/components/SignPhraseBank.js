@@ -16,12 +16,15 @@ import "./SignPhraseBank.css";
 
 export default function SignPhraseBank() {
   const categories = [
-    "All",
-    "Greetings",
-    "Common Phrases",
-    "Classroom",
-    "Emergency",
-  ];
+  "All",
+  "Greetings",
+  "Common Phrases",
+  "Common Sentences",
+  "Classroom",
+  "Emergency",
+  "Numbers",
+  "Travel",
+];
 
   const [searchTerm, setSearchTerm] =
     useState("");

@@ -14,6 +14,7 @@ export const fslPhrases = [
     video:
       "/fsl-videos/HelloF.mp4",
   },
+
   {
     id: 2,
     phrase: "Good morning",
@@ -28,6 +29,7 @@ export const fslPhrases = [
     video:
       "/fsl-videos/good-morningF.mp4",
   },
+
   {
     id: 3,
     phrase: "Good afternoon",
@@ -42,6 +44,7 @@ export const fslPhrases = [
     video:
       "/fsl-videos/good-afternoonF.mp4",
   },
+
   {
     id: 4,
     phrase: "Good evening",
@@ -56,6 +59,7 @@ export const fslPhrases = [
     video:
       "/fsl-videos/good-eveningF.mp4",
   },
+
   {
     id: 5,
     phrase: "Thank you",
@@ -71,6 +75,7 @@ export const fslPhrases = [
     video:
       "/fsl-videos/thank-youF.mp4",
   },
+
   {
     id: 6,
     phrase: "Please",
@@ -85,6 +90,7 @@ export const fslPhrases = [
     video:
       "/fsl-videos/pleaseF.mp4",
   },
+
   {
     id: 7,
     phrase: "Please repeat",
@@ -103,10 +109,10 @@ export const fslPhrases = [
     video:
       "/fsl-videos/please-repeatF.mp4",
   },
+
   {
     id: 8,
-    phrase:
-      "I don't understand",
+    phrase: "I don't understand",
     filipino:
       "Hindi ko maintindihan",
     category: "Classroom",
@@ -123,6 +129,7 @@ export const fslPhrases = [
     video:
       "/fsl-videos/i-dont-understandF.mp4",
   },
+
   {
     id: 9,
     phrase: "Yes",
@@ -138,6 +145,7 @@ export const fslPhrases = [
     video:
       "/fsl-videos/yesF.mp4",
   },
+
   {
     id: 10,
     phrase: "No",
@@ -153,6 +161,7 @@ export const fslPhrases = [
     video:
       "/fsl-videos/noF.mp4",
   },
+
   {
     id: 11,
     phrase: "Help",
@@ -169,6 +178,7 @@ export const fslPhrases = [
     video:
       "/fsl-videos/helpF.mp4",
   },
+
   {
     id: 12,
     phrase: "Are you okay?",
@@ -182,6 +192,169 @@ export const fslPhrases = [
       "are you alright",
       "you okay",
       "okay ka lang ba",
+    ],
+    video: null,
+  },
+
+
+  // =========================
+  // NUMBERS
+  // =========================
+
+  {
+    id: 13,
+    phrase: "One",
+    filipino: "Isa",
+    category: "Numbers",
+    description:
+      "Number one.",
+    keywords: [
+      "one",
+      "isa",
+    ],
+    video: null,
+  },
+
+  {
+    id: 14,
+    phrase: "Two",
+    filipino: "Dalawa",
+    category: "Numbers",
+    description:
+      "Number two.",
+    keywords: [
+      "two",
+      "dalawa",
+    ],
+    video: null,
+  },
+
+  {
+    id: 15,
+    phrase: "Three",
+    filipino: "Tatlo",
+    category: "Numbers",
+    description:
+      "Number three.",
+    keywords: [
+      "three",
+      "tatlo",
+    ],
+    video: null,
+  },
+
+  {
+    id: 16,
+    phrase: "Four",
+    filipino: "Apat",
+    category: "Numbers",
+    description:
+      "Number four.",
+    keywords: [
+      "four",
+      "apat",
+    ],
+    video: null,
+  },
+
+  {
+    id: 17,
+    phrase: "Five",
+    filipino: "Lima",
+    category: "Numbers",
+    description:
+      "Number five.",
+    keywords: [
+      "five",
+      "lima",
+    ],
+    video: null,
+  },
+
+
+  // =========================
+  // COMMON SENTENCES
+  // =========================
+
+  {
+    id: 18,
+    phrase: "How are you?",
+    filipino:
+      "Kumusta ka?",
+    category: "Common Sentences",
+    description:
+      "Used to ask about someone's condition.",
+    keywords: [
+      "how are you",
+      "kumusta ka",
+    ],
+    video: null,
+  },
+
+  {
+    id: 19,
+    phrase: "I am fine",
+    filipino:
+      "Ayos lang ako",
+    category: "Common Sentences",
+    description:
+      "Used to respond when someone asks how you are.",
+    keywords: [
+      "i am fine",
+      "im fine",
+      "ayos lang ako",
+    ],
+    video: null,
+  },
+
+
+  // =========================
+  // TRAVEL
+  // =========================
+
+  {
+    id: 20,
+    phrase: "Where is the airport?",
+    filipino:
+      "Nasaan ang paliparan?",
+    category: "Travel",
+    description:
+      "Used when asking for airport directions.",
+    keywords: [
+      "where is the airport",
+      "airport",
+      "nasaan ang airport",
+    ],
+    video: null,
+  },
+
+  {
+    id: 21,
+    phrase: "Where is the bus station?",
+    filipino:
+      "Nasaan ang istasyon ng bus?",
+    category: "Travel",
+    description:
+      "Used when asking for transportation locations.",
+    keywords: [
+      "where is the bus station",
+      "bus station",
+    ],
+    video: null,
+  },
+
+  {
+    id: 22,
+    phrase: "How much is the fare?",
+    filipino:
+      "Magkano ang pamasahe?",
+    category: "Travel",
+    description:
+      "Used when asking transportation cost.",
+    keywords: [
+      "how much is the fare",
+      "fare",
+      "pamasahe",
     ],
     video: null,
   },
