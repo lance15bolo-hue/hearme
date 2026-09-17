@@ -232,7 +232,7 @@ function App() {
 
     setGuestMode(true);
 
-    setActivePage("dashboard");
+    setActivePage("captions");
 
     addToast(
       "Entered as Guest User",
@@ -312,6 +312,36 @@ function App() {
 
 
   const renderPage = () => {
+
+    const guestAllowedPages = [
+  "captions",
+  "signbank",
+  "profile",
+  "settings"
+];
+
+
+if (
+  activeUser.role === "guest" &&
+  !guestAllowedPages.includes(activePage)
+) {
+
+  setActivePage("captions");
+
+  return (
+    <CaptioningPanel
+      user={activeUser}
+      addToast={addToast}
+      theme={theme}
+      onLoginRequest={() => {
+        setReturnToGuest(true);
+        setGuestMode(false);
+        setAuthMode("login");
+      }}
+    />
+  );
+
+}
 
 
     switch(activePage) {

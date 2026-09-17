@@ -18,6 +18,7 @@ import {
 
 import "./SidebarMobile.css";
 
+
 export default function Sidebar({
   user,
   activePage,
@@ -25,6 +26,7 @@ export default function Sidebar({
   theme,
   toggleTheme,
 }) {
+
   const [mobileMenuOpen, setMobileMenuOpen] =
     useState(false);
 
@@ -33,7 +35,7 @@ export default function Sidebar({
     user?.role === "guest";
 
 
-  const menu = [
+  const authenticatedMenu = [
     {
       key: "dashboard",
       icon: <FaHome />,
@@ -59,23 +61,42 @@ export default function Sidebar({
       icon: <FaComment />,
       label: "Community",
     },
-
-    // Only logged-in users
-    ...(!isGuest
-      ? [
-          {
-            key: "profile",
-            icon: <FaUser />,
-            label: "Profile",
-          },
-          {
-            key: "history",
-            icon: <FaHistory />,
-            label: "History",
-          },
-        ]
-      : []),
+    {
+      key: "profile",
+      icon: <FaUser />,
+      label: "Profile",
+    },
+    {
+      key: "history",
+      icon: <FaHistory />,
+      label: "History",
+    },
   ];
+
+
+  const guestMenu = [
+    {
+      key: "captions",
+      icon: <FaMicrophone />,
+      label: "Captioning",
+    },
+    {
+      key: "signbank",
+      icon: <FaHandPaper />,
+      label: "Sign Phrase Bank",
+    },
+    {
+      key: "profile",
+      icon: <FaUser />,
+      label: "Profile",
+    },
+  ];
+
+
+  const menu = isGuest
+    ? guestMenu
+    : authenticatedMenu;
+
 
 
   const initials =
@@ -105,6 +126,7 @@ export default function Sidebar({
 
 
   return (
+
     <aside
       className={
         mobileMenuOpen
@@ -128,11 +150,6 @@ export default function Sidebar({
               (previous) => !previous
             )
           }
-          aria-label={
-            mobileMenuOpen
-              ? "Close menu"
-              : "Open menu"
-          }
         >
 
           {mobileMenuOpen ? (
@@ -144,7 +161,6 @@ export default function Sidebar({
         </button>
 
       </div>
-
 
 
       <div className="sidebar-mobile-content">
@@ -172,7 +188,6 @@ export default function Sidebar({
 
           </p>
 
-
         </div>
 
 
@@ -180,7 +195,6 @@ export default function Sidebar({
         <div className="sidebar-nav-label">
           MAIN MENU
         </div>
-
 
 
         <ul className="sidebar-menu">
@@ -212,7 +226,7 @@ export default function Sidebar({
 
 
 
-          {user?.role === "admin" && (
+          {!isGuest && user?.role === "admin" && (
 
             <li
               className={
@@ -275,13 +289,9 @@ export default function Sidebar({
 
           <div className="sidebar-user-info">
 
-
             <span className="sidebar-user-name">
-
               {displayName}
-
             </span>
-
 
 
             <span className="sidebar-user-status">
@@ -302,14 +312,11 @@ export default function Sidebar({
           >
 
             {
-              role
-                .charAt(0)
-                .toUpperCase() +
+              role.charAt(0).toUpperCase() +
               role.slice(1)
             }
 
           </span>
-
 
 
         </div>
@@ -328,7 +335,6 @@ export default function Sidebar({
             <FaMoon />
           )}
 
-
           {theme === "dark"
             ? "Light Mode"
             : "Dark Mode"}
@@ -346,10 +352,11 @@ export default function Sidebar({
         </div>
 
 
-
       </div>
 
 
     </aside>
+
   );
+
 }
