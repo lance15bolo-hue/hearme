@@ -166,92 +166,156 @@ function HistoryDetails({
         </p>
 
 
-      </section>
+          </section>
+
+<section className="details-card">
+
+  <h3>
+    📝 Transcript
+  </h3>
+
+  <div className="content-box">
+
+    {
+      session.captions ||
+      "No transcript available."
+    }
+
+  </div>
+
+</section>
+
+
+
+<section className="details-card">
+
+  <h3>
+    🌐 Translation
+  </h3>
+
+  <div className="content-box">
+
+    {
+      session.translated ||
+      "No translation available."
+    }
+
+  </div>
+
+</section>
 
 
 
 
+<section className="details-card">
 
-      <section className="details-card">
-
-
-        <h3>
-          📝 Transcript
-        </h3>
+  <h3>
+    🌍 Language
+  </h3>
 
 
-        <div className="content-box">
+  <div className="content-box">
 
-          {
-            session.captions ||
-            "No transcript available."
-          }
+    {
+      session.inputMode || "N/A"
+    }
 
-        </div>
+    {" → "}
 
+    {
+      session.languageOutput || "N/A"
+    }
 
-      </section>
-
-
-
-
+  </div>
 
 
+</section>
 
-      <section className="details-card">
+      {
+        session.recordingUrl && (
 
+          <section className="details-card">
 
-        <h3>
-          🌐 Translation
-        </h3>
-
-
-        <div className="content-box">
-
-          {
-            session.translated ||
-            "No translation available."
-          }
-
-        </div>
+            <h3>
+              🎙️ Recording
+            </h3>
 
 
-      </section>
+            <audio
+              controls
+              style={{
+                width:"100%"
+              }}
+            >
+
+              <source
+                src={session.recordingUrl}
+                type="audio/webm"
+              />
+
+              Your browser does not support audio playback.
+
+            </audio>
+
+
+          </section>
+
+        )
+      }
 
 
 
 
+      {
+        session.fslHistory &&
+        session.fslHistory.length > 0 && (
+
+          <section className="details-card">
+
+
+            <h3>
+              🤟 Automatic FSL Detection
+            </h3>
 
 
 
-      <section className="details-card">
+            {
+              session.fslHistory.map(
+                (item,index)=>(
+
+                  <div
+                    key={index}
+                    className="content-box"
+                    style={{
+                      marginBottom:"10px"
+                    }}
+                  >
+
+                    <strong>
+                      {item.phrase}
+                    </strong>
 
 
-        <h3>
-          🌍 Language
-        </h3>
+                    <br/>
 
 
-        <div className="content-box">
+                    Filipino:
+                    {" "}
+                    {item.filipino}
 
 
-          {
-            session.inputMode || "N/A"
-          }
+                  </div>
+
+                )
+
+              )
+            }
 
 
-          {" → "}
+          </section>
 
-
-          {
-            session.languageOutput || "N/A"
-          }
-
-
-        </div>
-
-
-      </section>
+        )
+      }
 
 
 

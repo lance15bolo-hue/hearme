@@ -6,10 +6,7 @@ import React, {
 
 import {
   db,
-  storage,
 } from "../firebase";
-
-import { useRecording } from "../context/RecordingContext";
 
 import {
   addDoc,
@@ -17,12 +14,8 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 
+import { useRecording } from "../context/RecordingContext";
 
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-} from "firebase/storage";
 
 import {
   FaGraduationCap,
@@ -52,18 +45,27 @@ const {
   startRecording,
   stopRecording,
   recordingUrl,
+  waitForUpload,
 } = useRecording();
 
   const [listening, setListening] =
     useState(false);
 
-  const [caption, setCaption] =
-    useState("");
+const [caption, setCaption] =
+  useState("");
 
-  const [
-    interimCaption,
-    setInterimCaption,
-  ] = useState("");
+const [
+  interimCaption,
+  setInterimCaption,
+] = useState("");
+
+
+// PERMANENT SESSION TRANSCRIPT
+// Hindi nawawala kahit mag-clear ang live caption box
+const [
+  sessionTranscript,
+  setSessionTranscript
+] = useState("");
 
   const [translated, setTranslated] =
     useState("");
@@ -78,10 +80,16 @@ const {
     setDetectedFslPhrase,
   ] = useState(null);
 
-  const [
-    fslPlaybackQueue,
-    setFslPlaybackQueue,
-  ] = useState([]);
+ const [
+  fslPlaybackQueue,
+  setFslPlaybackQueue,
+] = useState([]);
+
+
+const [
+  fslHistory,
+  setFslHistory,
+] = useState([]);
 
   const recognitionRef =
     useRef(null);
@@ -131,18 +139,12 @@ const translationRequestRef =
     );
 
     // Recording states
-const mediaRecorderRef =
-  useRef(null);
-
-const recordingChunksRef =
-  useRef([]);
+// Recording is handled by RecordingContext
 
 
-const [, setIsRecording] =
-  useState(false);
-
-const [, setSessionRecordingUrl] =
-  useState("");
+const [
+  sessionRecordingUrl,
+] = useState("");
 
   useEffect(() => {
 
@@ -178,9 +180,17 @@ const [, setSessionRecordingUrl] =
       data.caption || ""
     );
 
+    setSessionTranscript(
+  data.sessionTranscript || ""
+);
+
     setTranslated(
       data.translated || ""
     );
+
+    setFslHistory(
+  data.fslHistory || []
+);
 
   }
 
@@ -236,31 +246,84 @@ const [, setSessionRecordingUrl] =
   }
 
   if (finalText.trim()) {
-    setCaption((previous) => {
-      const updatedText =
-        `${previous} ${finalText}`.trim();
 
-      const words =
-        updatedText.split(/\s+/);
 
-      const cleanedWords =
-        words.filter(
-          (word, index) =>
-            word.toLowerCase() !==
-            words[index - 1]?.toLowerCase()
-        );
+  // ===============================
+  // 1. SAVE PERMANENT TRANSCRIPT
+  // ===============================
 
-      return cleanedWords.join(" ");
-    });
-        if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-    }
+  setSessionTranscript((previous) => {
 
-   silenceTimerRef.current = setTimeout(() => {
-  setCaption("");
+    const updatedText =
+      `${previous} ${finalText}`.trim();
+
+
+    const words =
+      updatedText.split(/\s+/);
+
+
+    const cleanedWords =
+      words.filter(
+        (word, index) =>
+          word.toLowerCase() !==
+          words[index - 1]?.toLowerCase()
+      );
+
+
+    return cleanedWords.join(" ");
+
+  });
+
+
+
+  // ===============================
+  // 2. LIVE CAPTION DISPLAY ONLY
+  // ===============================
+
+  setCaption(
+    finalText.trim()
+  );
+
+
+
+  // ===============================
+  // 3. CLEAR INTERIM
+  // ===============================
+
   setInterimCaption("");
-}, 3000);
+
+
+
+  // ===============================
+  // 4. RESET SILENCE TIMER
+  // ===============================
+
+  if (silenceTimerRef.current) {
+
+    clearTimeout(
+      silenceTimerRef.current
+    );
+
   }
+
+
+
+  silenceTimerRef.current =
+    setTimeout(() => {
+
+
+      // CLEAR ONLY LIVE DISPLAY
+
+      setCaption("");
+
+      setInterimCaption("");
+
+
+    },3000);
+
+
+
+}
 
   setInterimCaption(
     interimText.trim()
@@ -371,15 +434,28 @@ const [, setSessionRecordingUrl] =
     lastMatchKeyRef.current =
       matchKey;
 
-    setFslPlaybackQueue(
-      (previousQueue) => [
-        ...previousQueue,
-        {
-          key: matchKey,
-          phrase: match.phrase,
-        },
-      ]
-    );
+   setFslPlaybackQueue(
+  (previousQueue) => [
+    ...previousQueue,
+    {
+      key: matchKey,
+      phrase: match.phrase,
+    },
+  ]
+);
+
+
+setFslHistory(
+  (previousHistory) => [
+    ...previousHistory,
+    {
+      key: matchKey,
+      phrase: match.phrase.phrase,
+      filipino: match.phrase.filipino,
+      detectedAt: new Date().toISOString(),
+    },
+  ]
+);
   }, [fullCaption]);
 
   /*
@@ -548,109 +624,7 @@ const [, setSessionRecordingUrl] =
     }
   };
 
-  const startLocalRecording = async () => {
-  try {
-    const stream =
-      await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
-
-    recordingChunksRef.current = [];
-
-    const recorder =
-      new MediaRecorder(stream);
-
-    recorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        recordingChunksRef.current.push(
-          event.data
-        );
-      }
-    };
-
-    recorder.onstop = async () => {
-
-  const audioBlob =
-    new Blob(
-      recordingChunksRef.current,
-      {
-        type: "audio/webm",
-      }
-    );
-
-
-  try {
-
-    const fileName =
-      `recordings/hearme_${Date.now()}.webm`;
-
-
-    const storageRef =
-      ref(
-        storage,
-        fileName
-      );
-
-
-    await uploadBytes(
-      storageRef,
-      audioBlob
-    );
-
-
-    const downloadUrl =
-      await getDownloadURL(
-        storageRef
-      );
-
-
-setSessionRecordingUrl(downloadUrl);
-
-
-    console.log(
-      "Recording uploaded:",
-      downloadUrl
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "Recording upload failed:",
-      error
-    );
-
-  }
-
-
-  stream
-    .getTracks()
-    .forEach(
-      (track) =>
-        track.stop()
-    );
-
-};
-
-    mediaRecorderRef.current =
-      recorder;
-
-    recorder.start();
-
-    setIsRecording(true);
-
-    console.log(
-      "Recording started"
-    );
-
-  } catch (error) {
-    console.error(
-      "Recording start error:",
-      error
-    );
-  }
-};
-
+  
 
   const toggleListen = () => {
     const rec =
@@ -681,21 +655,21 @@ setSessionRecordingUrl(downloadUrl);
        microphonePermissionDeniedRef.current =
          false;
 
-      setCaption("");
-      setInterimCaption("");
-      setTranslated("");
-      setTranslationStatus("");
+     setCaption("");
 
-      resetFslPlayback();
+setInterimCaption("");
 
+setTranslationStatus("");
+
+resetFslPlayback();
       shouldBeListeningRef.current =
   true;
 
-startLocalRecording();
+startRecording();
 
 try {
   rec.start();
-      } catch (error) {
+} catch (error) {
         console.error(
           "Speech recognition start error:",
           error
@@ -709,16 +683,21 @@ try {
     }
   };
 
-  const clearCaption = () => {
-    setCaption("");
-    setInterimCaption("");
-    setTranslated("");
-    setTranslationStatus("");
+ const clearCaption = () => {
 
-    resetFslPlayback();
+  setCaption("");
 
-    translationRequestRef.current++;
-  };
+  setInterimCaption("");
+
+  setTranslated("");
+
+  setTranslationStatus("");
+
+  resetFslPlayback();
+
+  translationRequestRef.current++;
+
+};
 
   const handleDetectedFslVideoReady =
     (event) => {
@@ -795,7 +774,7 @@ try {
       setTranslationStatus("");
 
       resetFslPlayback();
-    };
+    };  
 
  const saveSession = async () => {
 
@@ -827,7 +806,8 @@ try {
 
 
   try {
-
+const finalRecordingUrl =
+  await waitForUpload();
     await addDoc(
       collection(
         db,
@@ -844,13 +824,18 @@ try {
 
   context,
 
-  captions:
-    fullCaption,
+ captions:
+sessionTranscript || caption || "",
 
   translated,
+  
+fslHistory,
 
-  recordingUrl:
-    recordingUrl || "",
+ recordingUrl:
+finalRecordingUrl ||
+sessionRecordingUrl ||
+recordingUrl ||
+"",
 
   inputMode,
 
@@ -879,6 +864,8 @@ try {
     setSessionDate("");
 
     setContext("");
+
+    setFslHistory([]);
 
 
   } catch (error) {
@@ -1025,14 +1012,16 @@ try {
   sessionStorage.setItem(
     "hearme_pending_session",
     JSON.stringify({
-      subject,
-      instructor,
-      sessionDate,
-      context,
-      caption,
-      translated,
-      recordingUrl
-    })
+  subject,
+  instructor,
+  sessionDate,
+  context,
+  caption,
+  translated,
+  fslHistory,
+  sessionTranscript,
+  recordingUrl
+})
   );
 
   onLoginRequest();

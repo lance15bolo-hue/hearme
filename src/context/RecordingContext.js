@@ -18,56 +18,74 @@ const RecordingContext = createContext();
 
 export function RecordingProvider({ children }) {
 
-  const mediaRecorderRef =
-    useRef(null);
 
-  const streamRef =
-    useRef(null);
+  const mediaRecorderRef = useRef(null);
 
-  const chunksRef =
-    useRef([]);
+  const streamRef = useRef(null);
 
+  const chunksRef = useRef([]);
 
-  // latest recording URL (instant access)
-  const recordingUrlRef =
-    useRef("");
+  const recordingUrlRef = useRef("");
+
+  const uploadPromiseRef = useRef(null);
+
 
 
   const [isRecording, setIsRecording] =
     useState(false);
 
+
   const [recordingUrl, setRecordingUrl] =
     useState("");
+
+
 
 
   const startRecording = async () => {
 
     try {
 
+
       const stream =
         await navigator.mediaDevices.getUserMedia({
-          audio: true,
+          audio:true,
         });
+
 
 
       streamRef.current = stream;
 
 
-      // clear previous chunks
       chunksRef.current = [];
+
+      recordingUrlRef.current = "";
+
+      setRecordingUrl("");
+
 
 
       const recorder =
         new MediaRecorder(stream);
 
 
+
       mediaRecorderRef.current =
         recorder;
 
 
-      recorder.ondataavailable = (event) => {
 
-        if (event.data.size > 0) {
+
+      recorder.ondataavailable = (event)=>{
+
+
+        console.log(
+          "DATA AVAILABLE:",
+          event.data.size
+        );
+
+
+
+        if(event.data.size > 0){
 
           chunksRef.current.push(
             event.data
@@ -78,88 +96,138 @@ export function RecordingProvider({ children }) {
       };
 
 
-      recorder.onstop = async () => {
-
-        try {
-
-          const blob =
-            new Blob(
-              chunksRef.current,
-              {
-                type: "audio/webm",
-              }
-            );
 
 
-          chunksRef.current = [];
+
+      recorder.onstop = async()=>{
 
 
-          const fileName =
-            `recordings/hearme_${Date.now()}.webm`;
+        console.log(
+          "ONSTOP EVENT FIRED"
+        );
 
 
-          const storageRef =
-            ref(
-              storage,
-              fileName
-            );
+
+        const chunks = [
+          ...chunksRef.current
+        ];
 
 
-          await uploadBytes(
-            storageRef,
-            blob
-          );
+
+        console.log(
+          "FINAL CHUNKS:",
+          chunks.length
+        );
 
 
-          const url =
-            await getDownloadURL(
-              storageRef
-            );
+
+        uploadPromiseRef.current =
+          (async()=>{
 
 
-          // save latest url
-          recordingUrlRef.current = url;
-
-          setRecordingUrl(url);
+            try{
 
 
-          console.log(
-            "Recording uploaded:",
-            url
-          );
+              const blob =
+                new Blob(
+                  chunks,
+                  {
+                    type:"audio/webm",
+                  }
+                );
 
 
-          if (streamRef.current) {
 
-            streamRef.current
-              .getTracks()
-              .forEach(
-                (track) =>
-                  track.stop()
+              console.log(
+                "BLOB SIZE:",
+                blob.size
               );
 
 
-            streamRef.current = null;
 
-          }
+              const fileName =
+                `recordings/hearme_${Date.now()}.webm`;
 
 
-        } catch(error) {
 
-          console.error(
-            "Recording upload error:",
-            error
-          );
+              const storageRef =
+                ref(
+                  storage,
+                  fileName
+                );
 
-        }
+
+
+              await uploadBytes(
+                storageRef,
+                blob
+              );
+
+
+
+              console.log(
+                "UPLOAD SUCCESS"
+              );
+
+
+
+              const url =
+                await getDownloadURL(
+                  storageRef
+                );
+
+
+
+              console.log(
+                "DOWNLOAD URL:",
+                url
+              );
+
+
+
+              recordingUrlRef.current =
+                url;
+
+
+
+              setRecordingUrl(
+                url
+              );
+
+
+
+              return url;
+
+
+
+            }catch(error){
+
+
+              console.error(
+                "UPLOAD ERROR:",
+                error
+              );
+
+
+              return "";
+
+            }
+
+
+          })();
+
 
       };
 
 
-      recorder.start();
+
+
+      recorder.start(1000);
+
 
 
       setIsRecording(true);
+
 
 
       console.log(
@@ -167,50 +235,114 @@ export function RecordingProvider({ children }) {
       );
 
 
-    } catch(error) {
+
+    }catch(error){
+
 
       console.error(
-        "Recording error:",
+        "Recording start error:",
         error
       );
+
 
     }
 
   };
 
 
+
+
+
+
+
   const stopRecording = () => {
 
-    if (
+
+    if(
       mediaRecorderRef.current &&
       mediaRecorderRef.current.state !== "inactive"
-    ) {
+    ){
 
       mediaRecorderRef.current.stop();
 
     }
 
 
+
+    if(streamRef.current){
+
+
+      streamRef.current
+        .getTracks()
+        .forEach(
+          track => track.stop()
+        );
+
+
+      streamRef.current = null;
+
+    }
+
+
+
     setIsRecording(false);
+
 
 
     console.log(
       "Recording stopped"
     );
 
+
   };
+
+
+
+
+
+
+
+  const waitForUpload = async()=>{
+
+
+    if(uploadPromiseRef.current){
+
+      return await uploadPromiseRef.current;
+
+    }
+
+
+    return recordingUrlRef.current;
+
+
+  };
+
+
+
+
+
 
 
   return (
 
     <RecordingContext.Provider
+
       value={{
+
         isRecording,
+
         recordingUrl,
+
         recordingUrlRef,
+
         startRecording,
+
         stopRecording,
+
+        waitForUpload,
+
       }}
+
     >
 
       {children}
@@ -219,7 +351,12 @@ export function RecordingProvider({ children }) {
 
   );
 
+
 }
+
+
+
+
 
 
 export function useRecording(){
