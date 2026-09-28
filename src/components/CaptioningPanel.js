@@ -1436,6 +1436,60 @@ async function translateTaglish(
   Chrome first
   MyMemory fallback
 */
+
+async function translateWithGoogleCloud(
+  text,
+  sourceLanguage,
+  targetLanguage
+) {
+  const apiKey =
+    process.env.REACT_APP_GOOGLE_TRANSLATE_KEY;
+
+  if (!apiKey) {
+    console.warn(
+      "Google Translation API key missing."
+    );
+
+    return "";
+  }
+
+  const url =
+    "https://translation.googleapis.com/language/translate/v2";
+
+  const response = await fetch(
+    `${url}?key=${apiKey}`,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        q: text,
+        source: sourceLanguage,
+        target: targetLanguage,
+        format: "text",
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Google Translation HTTP ${response.status}`
+    );
+  }
+
+  const data =
+    await response.json();
+
+  return (
+    data?.data?.translations?.[0]
+      ?.translatedText
+      ?.trim() || ""
+  );
+}
+
 async function translateByCode(
   text,
   source,
@@ -1450,26 +1504,32 @@ async function translateByCode(
   }
 
   try {
-    const chromeResult =
-      await translateWithChrome(
-        text,
-        source,
-        target
-      );
-
-    if (chromeResult) {
-      console.log(
-        `Translation provider: Chrome Translator (${source} → ${target})`
-      );
-
-      return chromeResult;
-    }
-  } catch (error) {
-    console.warn(
-      "Chrome Translator unavailable:",
-      error
+  const googleResult =
+    await translateWithGoogleCloud(
+      text,
+      source,
+      target
     );
+
+
+  if (googleResult) {
+
+    console.log(
+      `Translation provider: Google Cloud Translation (${source} → ${target})`
+    );
+
+    return googleResult;
+
   }
+
+} catch (error) {
+
+  console.warn(
+    "Google Translation unavailable:",
+    error
+  );
+
+}
 
   try {
     const memoryResult =
