@@ -1556,57 +1556,6 @@ async function translateByCode(
   return "";
 }
 
-async function translateWithChrome(
-  text,
-  sourceLanguage,
-  targetLanguage
-) {
-  if (
-    !("Translator" in window)
-  ) {
-    return "";
-  }
-
-  const availability =
-    await window.Translator.availability({
-      sourceLanguage,
-      targetLanguage,
-    });
-
-  if (
-    availability ===
-    "unavailable"
-  ) {
-    return "";
-  }
-
-  const translator =
-    await window.Translator.create({
-      sourceLanguage,
-      targetLanguage,
-
-      monitor(monitor) {
-        monitor.addEventListener(
-          "downloadprogress",
-          (event) => {
-            console.log(
-              `Translation language pack: ${Math.round(
-                event.loaded * 100
-              )}%`
-            );
-          }
-        );
-      },
-    });
-
-  const result =
-    await translator.translate(
-      text
-    );
-
-  return result?.trim() || "";
-}
-
 async function translateWithMyMemory(
   text,
   sourceLanguage,
