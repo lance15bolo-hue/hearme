@@ -227,11 +227,14 @@
 }
 
 
-.btn_academic-btn:hover {
-  background: #12a882;
-  transform: translateY(-1px);
+/* Recording active state */
+.btn_academic-btn.recording-active {
+  background: #dc2626;
 }
 
+.btn_academic-btn.recording-active:hover {
+  background: #b91c1c;
+}
 
 .btn_academic-btn:active {
   transform: scale(0.98);

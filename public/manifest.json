@@ -1,6 +1,8 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "id": "/",
+  "short_name": "HearMe",
+  "name": "HearMe - Audio Captioning & FSL Support",
+  "description": "HearMe is an accessibility-oriented communication support application with real-time captioning and pre-recorded Filipino Sign Language resources.",
   "icons": [
     {
       "src": "favicon.ico",
@@ -18,8 +20,9 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#0F6E56",
+  "background_color": "#071F17"
 }

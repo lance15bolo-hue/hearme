@@ -2,6 +2,7 @@ import React, {
   useState,
   useRef,
   useEffect,
+  useCallback,
 } from "react";
 
 import {
@@ -111,6 +112,15 @@ const silenceTimerRef =
 
 const translationRequestRef =
   useRef(0);
+
+const translationQueueRef =
+  useRef(Promise.resolve());
+
+const previousTranscriptRef =
+  useRef("");
+
+const translationSegmentsRef =
+  useRef([]);
 
   const [inputMode, setInputMode] =
     useState("en-US");
@@ -308,19 +318,29 @@ const [
 
 
 
-  silenceTimerRef.current =
-    setTimeout(() => {
+silenceTimerRef.current =
+  setTimeout(() => {
 
 
-      // CLEAR ONLY LIVE DISPLAY
+    // CLEAR ONLY LIVE DISPLAY
 
-      setCaption("");
+    setCaption("");
 
-      setInterimCaption("");
+    setInterimCaption("");
 
 
-    },3000);
+    /*
+      Reset the last FSL match after the
+      current speech has finished.
 
+      This allows the same phrase to be
+      detected again in a new utterance.
+    */
+    lastMatchKeyRef.current =
+      null;
+
+
+  }, 3000);
 
 
 }
@@ -404,25 +424,39 @@ const [
     addToast,
   ]);
 
-  /*
+   /*
     FSL MATCHING
+
+    IMPORTANT:
+    Only finalized speech is used for FSL
+    detection.
+
+    Interim speech is intentionally excluded
+    so the same phrase is not detected twice
+    while the browser is still building the
+    final transcript.
   */
   useEffect(() => {
-    if (!fullCaption.trim()) {
+
+    if (!caption.trim()) {
       return;
     }
 
+
     const match =
       findLatestFslMatch(
-        fullCaption
+        caption
       );
+
 
     if (!match) {
       return;
     }
 
+
     const matchKey =
       `${match.phrase.id}-${match.index}`;
+
 
     if (
       lastMatchKeyRef.current ===
@@ -431,32 +465,46 @@ const [
       return;
     }
 
+
     lastMatchKeyRef.current =
       matchKey;
 
-   setFslPlaybackQueue(
-  (previousQueue) => [
-    ...previousQueue,
-    {
-      key: matchKey,
-      phrase: match.phrase,
-    },
-  ]
-);
+
+    setFslPlaybackQueue(
+      (previousQueue) => [
+        ...previousQueue,
+
+        {
+          key: matchKey,
+
+          phrase:
+            match.phrase,
+        },
+      ]
+    );
 
 
-setFslHistory(
-  (previousHistory) => [
-    ...previousHistory,
-    {
-      key: matchKey,
-      phrase: match.phrase.phrase,
-      filipino: match.phrase.filipino,
-      detectedAt: new Date().toISOString(),
-    },
-  ]
-);
-  }, [fullCaption]);
+    setFslHistory(
+      (previousHistory) => [
+        ...previousHistory,
+
+        {
+          key: matchKey,
+
+          phrase:
+            match.phrase.phrase,
+
+          filipino:
+            match.phrase.filipino,
+
+          detectedAt:
+            new Date().toISOString(),
+        },
+      ]
+    );
+
+
+  }, [caption]);
 
   /*
     Play detected FSL clips one at
@@ -513,98 +561,267 @@ setFslHistory(
     };
   }, []);
 
+    /*
+    TRANSLATION QUEUE
+
+    Each newly finalized speech segment is
+    translated separately and appended to the
+    existing session translation.
+
+    useCallback keeps the helper stable so
+    React's exhaustive-deps rule is satisfied.
+  */
+  const queueTranslationSegment =
+    useCallback(
+      (text) => {
+
+        const cleanText =
+          String(text || "").trim();
+
+        if (!cleanText) {
+          return;
+        }
+
+
+        const requestId =
+          translationRequestRef.current;
+
+        const sourceMode =
+          inputMode;
+
+        const destinationLanguage =
+          targetLang;
+
+
+        translationQueueRef.current =
+          translationQueueRef.current
+            .catch(() => "")
+            .then(async () => {
+
+              if (
+                requestId !==
+                translationRequestRef.current
+              ) {
+                return;
+              }
+
+
+              setTranslationStatus(
+                "Translating..."
+              );
+
+
+              let result = "";
+
+
+              if (
+                sourceMode === "taglish"
+              ) {
+
+                result =
+                  await translateTaglish(
+                    cleanText,
+                    destinationLanguage
+                  );
+
+              } else if (
+                destinationLanguage ===
+                "taglish"
+              ) {
+
+                result =
+                  await convertToTaglish(
+                    cleanText,
+                    sourceMode
+                  );
+
+              } else {
+
+                result =
+                  await translateText(
+                    cleanText,
+                    sourceMode,
+                    destinationLanguage
+                  );
+
+              }
+
+
+              if (
+                requestId !==
+                translationRequestRef.current
+              ) {
+                return;
+              }
+
+
+              if (result) {
+
+                setTranslated(
+                  (previous) => {
+
+                    const existing =
+                      String(
+                        previous || ""
+                      ).trim();
+
+
+                    if (!existing) {
+                      return result.trim();
+                    }
+
+
+                    return (
+                      `${existing} ${result.trim()}`
+                    ).trim();
+
+                  }
+                );
+
+
+                setTranslationStatus("");
+
+              } else {
+
+                setTranslationStatus(
+                  "Translation temporarily unavailable."
+                );
+
+              }
+
+            })
+            .catch((error) => {
+
+              console.error(
+                "Translation error:",
+                error
+              );
+
+
+              if (
+                requestId !==
+                translationRequestRef.current
+              ) {
+                return;
+              }
+
+
+              setTranslationStatus(
+                "Translation temporarily unavailable."
+              );
+
+            });
+
+      },
+      [
+        inputMode,
+        targetLang,
+      ]
+    );
+
+
   /*
-    TRANSLATION
+    Watch the permanent session transcript.
+
+    Only the newly added finalized speech
+    is sent to the translation provider.
   */
   useEffect(() => {
-    if (!fullCaption.trim()) {
-  return;
-}
 
-    const requestId =
-      ++translationRequestRef.current;
+    const currentTranscript =
+      sessionTranscript.trim();
 
-    const timer =
-      setTimeout(async () => {
-        setTranslationStatus(
-          "Translating..."
-        );
 
-        try {
-          let result = "";
+    if (!currentTranscript) {
 
-          if (
-            inputMode === "taglish"
-          ) {
-            result =
-              await translateTaglish(
-                fullCaption,
-                targetLang
-              );
-          } else if (
-            targetLang ===
-            "taglish"
-          ) {
-            result =
-              await convertToTaglish(
-                fullCaption,
-                inputMode
-              );
-          } else {
-            result =
-              await translateText(
-                fullCaption,
-                inputMode,
-                targetLang
-              );
-          }
+      previousTranscriptRef.current =
+        "";
 
-          if (
-            requestId !==
-            translationRequestRef.current
-          ) {
-            return;
-          }
+      return;
 
-          if (result) {
-            setTranslated(result);
-            setTranslationStatus("");
-          } else {
-            setTranslated("");
+    }
 
-            setTranslationStatus(
-              "Translation temporarily unavailable."
-            );
-          }
-        } catch (error) {
-          console.error(
-            "Translation error:",
-            error
-          );
 
-          if (
-            requestId !==
-            translationRequestRef.current
-          ) {
-            return;
-          }
+    const previousTranscript =
+      previousTranscriptRef.current;
 
-          setTranslated("");
 
-          setTranslationStatus(
-            "Translation temporarily unavailable."
-          );
-        }
-      }, 1200);
+    if (
+      currentTranscript ===
+      previousTranscript
+    ) {
+      return;
+    }
 
-    return () =>
-      clearTimeout(timer);
+
+    let newSegment = "";
+
+
+    if (
+      previousTranscript &&
+      currentTranscript.startsWith(
+        previousTranscript
+      )
+    ) {
+
+      newSegment =
+        currentTranscript
+          .slice(
+            previousTranscript.length
+          )
+          .trim();
+
+    } else {
+
+      /*
+        Transcript was replaced or reset.
+        Start a fresh translation sequence.
+      */
+
+      translationSegmentsRef.current =
+        [];
+
+
+      translationRequestRef.current++;
+
+
+      translationQueueRef.current =
+        Promise.resolve();
+
+
+      setTranslated("");
+
+
+      newSegment =
+        currentTranscript;
+
+    }
+
+
+    previousTranscriptRef.current =
+      currentTranscript;
+
+
+    if (!newSegment) {
+      return;
+    }
+
+
+    translationSegmentsRef.current.push(
+      newSegment
+    );
+
+
+    queueTranslationSegment(
+      newSegment
+    );
+
+
   }, [
-    fullCaption,
-    targetLang,
-    inputMode,
+    sessionTranscript,
+    queueTranslationSegment,
   ]);
-
+  
   const resetFslPlayback = () => {
     setDetectedFslPhrase(null);
     setFslPlaybackQueue([]);
@@ -624,52 +841,98 @@ setFslHistory(
     }
   };
 
-  
+    const handleStartRecording = async () => {
 
-  const toggleListen = () => {
+    /*
+      Starting an explicit recording creates
+      a new recording-session boundary.
+
+      Any captioning, translation, or FSL
+      detections made before recording started
+      must not be carried into this recorded
+      session.
+    */
+
+    setCaption("");
+
+setInterimCaption("");
+
+setSessionTranscript("");
+
+setTranslated("");
+
+setTranslationStatus("");
+
+setFslHistory([]);
+
+resetFslPlayback();
+
+
+previousTranscriptRef.current =
+  "";
+
+translationSegmentsRef.current =
+  [];
+
+translationRequestRef.current++;
+
+translationQueueRef.current =
+  Promise.resolve();
+
+
+await startRecording();
+
+  };
+
+    const toggleListen = () => {
     const rec =
       recognitionRef.current;
 
     if (!rec) return;
 
-   if (
-  shouldBeListeningRef.current
-) {
-  shouldBeListeningRef.current =
-    false;
+    if (
+      shouldBeListeningRef.current
+    ) {
+      shouldBeListeningRef.current =
+        false;
 
-  stopRecording();
+      setInterimCaption("");
 
-  setInterimCaption("");
-
-  try {
-    rec.stop();
+      try {
+        rec.stop();
       } catch (error) {
         console.error(
           "Speech recognition stop error:",
           error
         );
       }
+
     } else {
 
-       microphonePermissionDeniedRef.current =
-         false;
+      microphonePermissionDeniedRef.current =
+        false;
 
-     setCaption("");
+      setCaption("");
+      setInterimCaption("");
+      setTranslationStatus("");
 
-setInterimCaption("");
+      resetFslPlayback();
 
-setTranslationStatus("");
-
-resetFslPlayback();
       shouldBeListeningRef.current =
-  true;
+        true;
 
-startRecording();
+      /*
+        Start recording only if recording
+        is not already active.
 
-try {
-  rec.start();
-} catch (error) {
+        IMPORTANT:
+        Stop Listening will NOT stop recording.
+      */
+      
+
+      try {
+        rec.start();
+      } catch (error) {
         console.error(
           "Speech recognition start error:",
           error
@@ -696,6 +959,8 @@ try {
   resetFslPlayback();
 
   translationRequestRef.current++;
+  translationQueueRef.current =
+  Promise.resolve();
 
 };
 
@@ -776,7 +1041,7 @@ try {
       resetFslPlayback();
     };  
 
- const saveSession = async () => {
+const saveSession = async () => {
 
   // Guest users cannot save transcript history
   if (!user?.uid || user?.role === "guest") {
@@ -806,48 +1071,51 @@ try {
 
 
   try {
-const finalRecordingUrl =
-  await waitForUpload();
+
+    const finalRecordingUrl =
+      await waitForUpload();
+
+
     await addDoc(
       collection(
         db,
         "academicSessions"
       ),
       {
-  userId: user.uid,
+        userId: user.uid,
 
-  subject,
+        subject,
 
-  instructor,
+        instructor,
 
-  sessionDate,
+        sessionDate,
 
-  context,
+        context,
 
- captions:
-sessionTranscript || caption || "",
+        captions:
+          sessionTranscript || caption || "",
 
-  translated,
-  
-fslHistory,
+        translated,
 
- recordingUrl:
-finalRecordingUrl ||
-sessionRecordingUrl ||
-recordingUrl ||
-"",
+        fslHistory,
 
-  inputMode,
+        recordingUrl:
+          finalRecordingUrl ||
+          sessionRecordingUrl ||
+          recordingUrl ||
+          "",
 
-  languageOutput:
-    targetLang,
+        inputMode,
 
-  sessionStatus:
-    "completed",
+        languageOutput:
+          targetLang,
 
-  createdAt:
-    serverTimestamp(),
-}
+        sessionStatus:
+          "completed",
+
+        createdAt:
+          serverTimestamp(),
+      }
     );
 
 
@@ -857,6 +1125,16 @@ recordingUrl ||
     );
 
 
+    /*
+      RESET SESSION STATE
+
+      The saved session has already been
+      written to Firestore.
+
+      Everything below prepares Captioning
+      for a completely fresh session.
+    */
+
     setSubject("");
 
     setInstructor("");
@@ -865,7 +1143,30 @@ recordingUrl ||
 
     setContext("");
 
+    setCaption("");
+
+    setInterimCaption("");
+
+    setSessionTranscript("");
+
+    setTranslated("");
+
+    setTranslationStatus("");
+
     setFslHistory([]);
+
+    resetFslPlayback();
+
+    translationRequestRef.current++;
+
+
+    /*
+      Remove any pending session data that
+      may have been stored before login.
+    */
+    sessionStorage.removeItem(
+      "hearme_pending_session"
+    );
 
 
   } catch (error) {
@@ -979,13 +1280,17 @@ recordingUrl ||
        <div className="recording-controls">
 
   <button
-    className="btn_academic-btn"
-    onClick={
-      isRecording
-        ? stopRecording
-        : startRecording
-    }
-  >
+  className={
+    isRecording
+      ? "btn_academic-btn recording-active"
+      : "btn_academic-btn"
+  }
+  onClick={
+    isRecording
+      ? stopRecording
+      : handleStartRecording
+  }
+>
     {
       isRecording
         ? "Stop Recording"
