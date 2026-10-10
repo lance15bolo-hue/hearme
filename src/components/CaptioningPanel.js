@@ -33,6 +33,7 @@ import {
 } from "react-icons/fa";
 
 import { fslPhrases } from "./fslPhrases";
+import DhhResponseAssistant from "./DhhResponseAssistant";
 import "./CaptioningPanel.css";
 
 export default function CaptioningPanel({
@@ -1648,6 +1649,8 @@ const saveSession = async () => {
           </div>
         )}
       </div>
+
+        <DhhResponseAssistant />
 
     </section>
   );
