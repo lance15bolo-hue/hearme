@@ -47,6 +47,7 @@ const {
   startRecording,
   stopRecording,
   recordingUrl,
+  recordingStartedAtRef,
   waitForUpload,
 } = useRecording();
 
@@ -69,7 +70,13 @@ const [
   setSessionTranscript
 ] = useState("");
 
+  // Permanent cumulative translation for the saved academic session.
+  // This remains intact even when the live translation display clears.
   const [translated, setTranslated] =
+    useState("");
+
+  // Live translation display: only the latest translated speech segment.
+  const [liveTranslation, setLiveTranslation] =
     useState("");
 
   const [
@@ -116,6 +123,13 @@ const translationRequestRef =
 
 const translationQueueRef =
   useRef(Promise.resolve());
+
+// Prevent an older queued translation from replacing a newer live result.
+const translationSegmentSequenceRef =
+  useRef(0);
+
+const liveTranslationClearTimerRef =
+  useRef(null);
 
 const previousTranscriptRef =
   useRef("");
@@ -303,6 +317,13 @@ const [
 
   setInterimCaption("");
 
+  if (liveTranslationClearTimerRef.current) {
+    clearTimeout(liveTranslationClearTimerRef.current);
+    liveTranslationClearTimerRef.current = null;
+  }
+
+  setLiveTranslation("");
+
 
 
   // ===============================
@@ -328,6 +349,13 @@ silenceTimerRef.current =
     setCaption("");
 
     setInterimCaption("");
+
+    if (liveTranslationClearTimerRef.current) {
+      clearTimeout(liveTranslationClearTimerRef.current);
+      liveTranslationClearTimerRef.current = null;
+    }
+
+    setLiveTranslation("");
 
 
     /*
@@ -500,12 +528,37 @@ silenceTimerRef.current =
 
           detectedAt:
             new Date().toISOString(),
+
+          // Relative position inside the saved recording.
+          // This is intentionally separate from detectedAt so older
+          // sessions remain readable while new sessions can be replayed
+          // against the audio timeline.
+          recordingOffsetSeconds:
+            recordingStartedAtRef.current
+              ? Math.max(
+                  0,
+                  (Date.now() -
+                    recordingStartedAtRef.current) /
+                    1000
+                )
+              : null,
+
+          // Keep the original millisecond field for backward compatibility
+          // with sessions saved by the first synchronized replay version.
+          recordingOffsetMs:
+            recordingStartedAtRef.current
+              ? Math.max(
+                  0,
+                  Date.now() -
+                    recordingStartedAtRef.current
+                )
+              : null,
         },
       ]
     );
 
 
-  }, [caption]);
+  }, [caption, recordingStartedAtRef]);
 
   /*
     Play detected FSL clips one at
@@ -559,6 +612,14 @@ silenceTimerRef.current =
           fslClearTimerRef.current
         );
       }
+
+      if (
+        liveTranslationClearTimerRef.current
+      ) {
+        clearTimeout(
+          liveTranslationClearTimerRef.current
+        );
+      }
     };
   }, []);
 
@@ -586,6 +647,9 @@ silenceTimerRef.current =
 
         const requestId =
           translationRequestRef.current;
+
+        const segmentId =
+          ++translationSegmentSequenceRef.current;
 
         const sourceMode =
           inputMode;
@@ -658,6 +722,10 @@ silenceTimerRef.current =
 
               if (result) {
 
+                const cleanResult =
+                  result.trim();
+
+                // Keep the complete cumulative translation for saving/History.
                 setTranslated(
                   (previous) => {
 
@@ -668,25 +736,54 @@ silenceTimerRef.current =
 
 
                     if (!existing) {
-                      return result.trim();
+                      return cleanResult;
                     }
 
 
                     return (
-                      `${existing} ${result.trim()}`
+                      `${existing} ${cleanResult}`
                     ).trim();
 
                   }
                 );
 
+                // Show only the newest translated speech in the live UI.
+                if (
+                  segmentId ===
+                  translationSegmentSequenceRef.current
+                ) {
+                  setLiveTranslation(
+                    cleanResult
+                  );
 
-                setTranslationStatus("");
+                  if (
+                    liveTranslationClearTimerRef.current
+                  ) {
+                    clearTimeout(
+                      liveTranslationClearTimerRef.current
+                    );
+                  }
+
+                  liveTranslationClearTimerRef.current =
+                    setTimeout(() => {
+                      setLiveTranslation("");
+                      liveTranslationClearTimerRef.current =
+                        null;
+                    }, 3000);
+
+                  setTranslationStatus("");
+                }
 
               } else {
 
-                setTranslationStatus(
-                  "Translation temporarily unavailable."
-                );
+                if (
+                  segmentId ===
+                  translationSegmentSequenceRef.current
+                ) {
+                  setTranslationStatus(
+                    "Translation temporarily unavailable."
+                  );
+                }
 
               }
 
@@ -707,9 +804,14 @@ silenceTimerRef.current =
               }
 
 
-              setTranslationStatus(
-                "Translation temporarily unavailable."
-              );
+              if (
+                segmentId ===
+                translationSegmentSequenceRef.current
+              ) {
+                setTranslationStatus(
+                  "Translation temporarily unavailable."
+                );
+              }
 
             });
 
@@ -792,6 +894,13 @@ silenceTimerRef.current =
 
       setTranslated("");
 
+      if (liveTranslationClearTimerRef.current) {
+        clearTimeout(liveTranslationClearTimerRef.current);
+        liveTranslationClearTimerRef.current = null;
+      }
+
+      setLiveTranslation("");
+
 
       newSegment =
         currentTranscript;
@@ -861,6 +970,13 @@ setInterimCaption("");
 setSessionTranscript("");
 
 setTranslated("");
+
+if (liveTranslationClearTimerRef.current) {
+  clearTimeout(liveTranslationClearTimerRef.current);
+  liveTranslationClearTimerRef.current = null;
+}
+
+setLiveTranslation("");
 
 setTranslationStatus("");
 
@@ -955,6 +1071,13 @@ await startRecording();
 
   setTranslated("");
 
+  if (liveTranslationClearTimerRef.current) {
+    clearTimeout(liveTranslationClearTimerRef.current);
+    liveTranslationClearTimerRef.current = null;
+  }
+
+  setLiveTranslation("");
+
   setTranslationStatus("");
 
   resetFslPlayback();
@@ -1037,6 +1160,13 @@ await startRecording();
       setCaption("");
       setInterimCaption("");
       setTranslated("");
+
+      if (liveTranslationClearTimerRef.current) {
+        clearTimeout(liveTranslationClearTimerRef.current);
+        liveTranslationClearTimerRef.current = null;
+      }
+
+      setLiveTranslation("");
       setTranslationStatus("");
 
       resetFslPlayback();
@@ -1151,6 +1281,13 @@ const saveSession = async () => {
     setSessionTranscript("");
 
     setTranslated("");
+
+    if (liveTranslationClearTimerRef.current) {
+      clearTimeout(liveTranslationClearTimerRef.current);
+      liveTranslationClearTimerRef.current = null;
+    }
+
+    setLiveTranslation("");
 
     setTranslationStatus("");
 
@@ -1538,13 +1675,13 @@ const saveSession = async () => {
 
         <div
           className={
-            translated
+            liveTranslation
               ? "translation-primary-text"
               : "translation-primary-placeholder"
           }
         >
-          {translated
-            ? translated
+          {liveTranslation
+            ? liveTranslation
             : translationStatus
             ? translationStatus
             : "Translation will appear here"}

@@ -505,3 +505,227 @@
     }
 
 }
+/* =========================================================
+   SYNCHRONIZED SESSION REPLAY
+   ========================================================= */
+
+.synchronized-replay-card {
+    overflow: hidden;
+}
+
+.synchronized-replay-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.synchronized-replay-heading h3 {
+    margin-bottom: 7px;
+}
+
+.synchronized-replay-heading p {
+    margin: 0;
+    color: #b9d8d0;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.synchronized-replay-badge {
+    flex-shrink: 0;
+    padding: 7px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(24, 212, 155, 0.35);
+    background: rgba(24, 212, 155, 0.08);
+    color: #18d49b;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.synchronized-replay-player {
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid rgba(24, 212, 155, 0.2);
+    background: rgba(0, 0, 0, 0.14);
+}
+
+.synchronized-replay-audio-label {
+    color: #18d49b;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.synchronized-replay-audio-note {
+    margin: 9px 0 0 !important;
+    color: #8fb5aa !important;
+    font-size: 11px !important;
+    line-height: 1.5;
+}
+
+.synchronized-replay-fsl {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(24, 212, 155, 0.28);
+    background: rgba(7, 19, 15, 0.8);
+}
+
+.synchronized-replay-fsl-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.synchronized-replay-fsl-header > div {
+    min-width: 0;
+}
+
+.synchronized-replay-fsl-header span {
+    display: block;
+    color: #18d49b;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+}
+
+.synchronized-replay-fsl-header strong {
+    display: block;
+    color: white;
+    font-size: 16px;
+    margin-bottom: 2px;
+    overflow-wrap: anywhere;
+}
+
+.synchronized-replay-fsl-header small {
+    color: #b9d8d0;
+    font-size: 12px;
+}
+
+.synchronized-replay-fsl-header > span:last-child {
+    flex-shrink: 0;
+    color: #18d49b;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.synchronized-replay-video {
+    display: block;
+    width: min(100%, 340px);
+    max-height: 52vh;
+    aspect-ratio: 9 / 16;
+    object-fit: contain;
+    margin: 0 auto;
+    border-radius: 10px;
+    background: #000;
+}
+
+.synchronized-replay-unavailable,
+.synchronized-replay-empty {
+    margin-top: 15px;
+    min-height: 90px;
+    padding: 18px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.18);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    text-align: center;
+}
+
+.synchronized-replay-unavailable strong {
+    color: white;
+    font-size: 14px;
+}
+
+.synchronized-replay-unavailable span,
+.synchronized-replay-empty {
+    color: #9fc2b8;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.synchronized-replay-events {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.synchronized-replay-event {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 9px;
+    row-gap: 2px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.synchronized-replay-event.active {
+    border-color: rgba(24, 212, 155, 0.55);
+    background: rgba(24, 212, 155, 0.08);
+}
+
+.synchronized-replay-event > span {
+    grid-row: 1 / span 2;
+    color: #18d49b;
+    font-size: 11px;
+    font-weight: 700;
+    align-self: center;
+}
+
+.synchronized-replay-event strong {
+    color: white;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.synchronized-replay-event small {
+    color: #9fc2b8;
+    font-size: 10px;
+}
+
+.synchronized-replay-note {
+    margin: 12px 0 0 !important;
+    color: #8fb5aa !important;
+    font-size: 11px !important;
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .synchronized-replay-heading {
+        flex-direction: column;
+    }
+
+    .synchronized-replay-badge {
+        align-self: flex-start;
+    }
+
+    .synchronized-replay-player {
+        padding: 12px;
+    }
+
+    .synchronized-replay-video {
+        width: min(100%, 280px);
+        max-height: 50vh;
+    }
+}
+
+@media (max-width: 420px) {
+    .synchronized-replay-events {
+        grid-template-columns: 1fr;
+    }
+
+    .synchronized-replay-fsl-header {
+        flex-direction: column;
+    }
+}

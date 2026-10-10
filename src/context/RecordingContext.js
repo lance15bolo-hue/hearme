@@ -29,6 +29,10 @@ export function RecordingProvider({ children }) {
 
   const uploadPromiseRef = useRef(null);
 
+  // Timestamp anchor for synchronizing saved accessibility events
+  // with the recorded audio timeline.
+  const recordingStartedAtRef = useRef(0);
+
 
 
   const [isRecording, setIsRecording] =
@@ -59,6 +63,7 @@ export function RecordingProvider({ children }) {
       chunksRef.current = [];
 
       recordingUrlRef.current = "";
+      recordingStartedAtRef.current = 0;
 
       setRecordingUrl("");
 
@@ -222,6 +227,9 @@ export function RecordingProvider({ children }) {
 
 
 
+      // Timestamp anchor for the saved audio timeline.
+      recordingStartedAtRef.current = Date.now();
+
       recorder.start(1000);
 
 
@@ -334,6 +342,8 @@ export function RecordingProvider({ children }) {
         recordingUrl,
 
         recordingUrlRef,
+
+        recordingStartedAtRef,
 
         startRecording,
 
