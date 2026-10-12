@@ -34,12 +34,14 @@ import {
 
 import { fslPhrases } from "./fslPhrases";
 import DhhResponseAssistant from "./DhhResponseAssistant";
+import ClassroomAudioAdapter from "./ClassroomAudioAdapter";
 import "./CaptioningPanel.css";
 
 export default function CaptioningPanel({
   user,
   addToast,
   onLoginRequest,
+  onTranscriptIngestionReady,
 }) {
 
 const {
@@ -49,10 +51,18 @@ const {
   recordingUrl,
   recordingStartedAtRef,
   waitForUpload,
+  setExternalRecordingStream,
 } = useRecording();
 
   const [listening, setListening] =
     useState(false);
+
+  const [classroomAudioActive, setClassroomAudioActive] =
+    useState(false);
+
+  // Audio stream supplied by the classroom adapter. It is used only when
+  // the user starts a recording while classroom audio is active.
+  const classroomAudioStreamRef = useRef(null);
 
 const [caption, setCaption] =
   useState("");
@@ -70,10 +80,25 @@ const [
   setSessionTranscript
 ] = useState("");
 
+// Synchronous transcript mirror used by the shared ingestion boundary.
+// This prevents two finalized segments arriving before React re-renders
+// from appending against the same stale transcript value.
+const sessionTranscriptRef = useRef("");
+
+// Prevent the same finalized segment from being inserted twice in a row.
+// This is reset after the existing three-second speech-silence window and
+// whenever a new session begins.
+const lastIngestedSegmentRef = useRef("");
+
   // Permanent cumulative translation for the saved academic session.
   // This remains intact even when the live translation display clears.
   const [translated, setTranslated] =
     useState("");
+
+  // Synchronous mirror of the permanent translation used by Save Session.
+  // This prevents a just-completed translation from being missed when the
+  // user saves before React has finished the next render.
+  const translatedRef = useRef("");
 
   // Live translation display: only the latest translated speech segment.
   const [liveTranslation, setLiveTranslation] =
@@ -109,8 +134,12 @@ const [
     const microphonePermissionDeniedRef =
     useRef(false);
 
-  const lastMatchKeyRef =
-    useRef(null);
+  // Tracks FSL phrase occurrences already queued during the current
+  // live utterance. This allows multiple different FSL phrases in one
+  // classroom sentence while preventing repeated re-detection of the
+  // same interim result.
+  const detectedFslOccurrenceKeysRef =
+    useRef(new Set());
 
   const fslClearTimerRef =
   useRef(null);
@@ -131,11 +160,24 @@ const translationSegmentSequenceRef =
 const liveTranslationClearTimerRef =
   useRef(null);
 
+const liveTranslationDebounceTimerRef =
+  useRef(null);
+
+const liveTranslationRequestRef =
+  useRef(0);
+
 const previousTranscriptRef =
   useRef("");
 
 const translationSegmentsRef =
   useRef([]);
+
+// Live display should feel realtime: after the speaker stops,
+// clear the visible caption/translation quickly while keeping
+// the permanent transcript and recording untouched.
+const LIVE_SILENCE_CLEAR_MS = 1500;
+const LIVE_TRANSLATION_CLEAR_MS = 1500;
+const LIVE_TRANSLATION_DEBOUNCE_MS = 700;
 
   const [inputMode, setInputMode] =
     useState("en-US");
@@ -205,12 +247,24 @@ const [
       data.caption || ""
     );
 
+    const restoredTranscript =
+      data.sessionTranscript || "";
+
+    sessionTranscriptRef.current =
+      restoredTranscript;
+
     setSessionTranscript(
-  data.sessionTranscript || ""
-);
+      restoredTranscript
+    );
+
+    const restoredTranslation =
+      data.translated || "";
+
+    translatedRef.current =
+      restoredTranslation;
 
     setTranslated(
-      data.translated || ""
+      restoredTranslation
     );
 
     setFslHistory(
@@ -220,6 +274,272 @@ const [
   }
 
 }, []);
+
+  /*
+    SHARED FINALIZED-TRANSCRIPT INGESTION
+
+    Both the existing Web Speech API and a future classroom/meeting
+    transcript source must submit finalized text through this function.
+    Downstream translation remains driven by sessionTranscript, and FSL
+    matching remains driven by caption; this function does not create a
+    second translation or FSL processing path.
+  */
+  const clearLiveSpeechDisplay =
+    useCallback(() => {
+      setCaption("");
+      setInterimCaption("");
+
+      if (liveTranslationClearTimerRef.current) {
+        clearTimeout(
+          liveTranslationClearTimerRef.current
+        );
+        liveTranslationClearTimerRef.current = null;
+      }
+
+      if (liveTranslationDebounceTimerRef.current) {
+        clearTimeout(
+          liveTranslationDebounceTimerRef.current
+        );
+        liveTranslationDebounceTimerRef.current = null;
+      }
+
+      liveTranslationRequestRef.current++;
+      setLiveTranslation("");
+
+      // A silence boundary starts a fresh live utterance. Previously
+      // detected FSL occurrences are allowed again in the next utterance.
+      detectedFslOccurrenceKeysRef.current.clear();
+      lastIngestedSegmentRef.current = "";
+    }, []);
+
+  const scheduleLiveSpeechClear =
+    useCallback(() => {
+      if (silenceTimerRef.current) {
+        clearTimeout(
+          silenceTimerRef.current
+        );
+      }
+
+      silenceTimerRef.current =
+        setTimeout(() => {
+          clearLiveSpeechDisplay();
+          silenceTimerRef.current = null;
+        }, LIVE_SILENCE_CLEAR_MS);
+    }, [clearLiveSpeechDisplay]);
+
+  const cancelLiveSpeechClear =
+    useCallback(() => {
+      if (silenceTimerRef.current) {
+        clearTimeout(
+          silenceTimerRef.current
+        );
+        silenceTimerRef.current = null;
+      }
+    }, []);
+
+  /*
+    SHARED FINALIZED-TRANSCRIPT INGESTION
+
+    Both the existing Web Speech API and the classroom audio adapter submit
+    finalized text through this same function. The permanent transcript is
+    still the source used for saved History/translation processing.
+  */
+  const ingestFinalizedTranscriptSegment =
+    useCallback((segmentText, options = {}) => {
+      const cleanSegment =
+        String(segmentText || "")
+          .trim()
+          .replace(/\s+/g, " ");
+
+      if (!cleanSegment) {
+        return false;
+      }
+
+      const normalizedSegment =
+        cleanSegment.toLocaleLowerCase();
+
+      if (
+        lastIngestedSegmentRef.current ===
+        normalizedSegment
+      ) {
+        return false;
+      }
+
+      lastIngestedSegmentRef.current =
+        normalizedSegment;
+
+      const previousTranscript =
+        sessionTranscriptRef.current;
+
+      const updatedText =
+        `${previousTranscript} ${cleanSegment}`.trim();
+
+      const words =
+        updatedText.split(/\s+/);
+
+      const cleanedWords =
+        words.filter(
+          (word, index) =>
+            word.toLowerCase() !==
+            words[index - 1]?.toLowerCase()
+        );
+
+      const nextTranscript =
+        cleanedWords.join(" ");
+
+      sessionTranscriptRef.current =
+        nextTranscript;
+
+      setSessionTranscript(
+        nextTranscript
+      );
+
+      const showLiveDisplay =
+        options?.showLiveDisplay !== false;
+
+      if (showLiveDisplay) {
+        // Keep the finalized segment visible while the speaker is active.
+        // The shared silence boundary clears only the live display; the
+        // permanent transcript and recording remain untouched.
+        setCaption(cleanSegment);
+        setInterimCaption("");
+
+        // Do not erase a live translation preview immediately when a final
+        // result arrives. The preview can bridge the recognition/translation
+        // latency until the finalized translation is ready.
+        scheduleLiveSpeechClear();
+      }
+
+      return true;
+    }, [scheduleLiveSpeechClear]);
+
+  // Optional integration contract: a future parent/classroom module can
+  // receive this function and call it with finalized transcript segments.
+  // Passing null on cleanup tells the parent that this handler is no longer
+  // registered. Existing App usage does not need to pass this prop.
+  useEffect(() => {
+    if (
+      typeof onTranscriptIngestionReady !== "function"
+    ) {
+      return undefined;
+    }
+
+    onTranscriptIngestionReady(
+      ingestFinalizedTranscriptSegment
+    );
+
+    return () => {
+      onTranscriptIngestionReady(null);
+    };
+  }, [
+    onTranscriptIngestionReady,
+    ingestFinalizedTranscriptSegment,
+  ]);
+
+  /*
+    LIVE TRANSLATION PREVIEW
+
+    Interim speech is translated with a short debounce so the classroom UI
+    does not wait for the browser to finalize a long teacher utterance.
+    This preview never changes the permanent `translated` History value;
+    finalized segments continue through the existing translation queue.
+  */
+  const queueLiveTranslationPreview =
+    useCallback(
+      (text) => {
+        const cleanText =
+          String(text || "")
+            .trim()
+            .replace(/\s+/g, " ");
+
+        if (!cleanText || cleanText.length < 3) {
+          return;
+        }
+
+        if (liveTranslationDebounceTimerRef.current) {
+          clearTimeout(
+            liveTranslationDebounceTimerRef.current
+          );
+        }
+
+        const requestId =
+          ++liveTranslationRequestRef.current;
+
+        liveTranslationDebounceTimerRef.current =
+          setTimeout(async () => {
+            liveTranslationDebounceTimerRef.current =
+              null;
+
+            if (
+              requestId !==
+              liveTranslationRequestRef.current
+            ) {
+              return;
+            }
+
+            const sourceMode =
+              inputMode;
+            const destinationLanguage =
+              targetLang;
+
+            try {
+              let result = "";
+
+              if (
+                sourceMode === "taglish"
+              ) {
+                result =
+                  await translateTaglish(
+                    cleanText,
+                    destinationLanguage
+                  );
+              } else if (
+                destinationLanguage ===
+                "taglish"
+              ) {
+                result =
+                  await convertToTaglish(
+                    cleanText,
+                    sourceMode
+                  );
+              } else {
+                result =
+                  await translateText(
+                    cleanText,
+                    sourceMode,
+                    destinationLanguage
+                  );
+              }
+
+              if (
+                requestId !==
+                liveTranslationRequestRef.current
+              ) {
+                return;
+              }
+
+              if (result) {
+                setLiveTranslation(
+                  result.trim()
+                );
+                setTranslationStatus("");
+              }
+            } catch (error) {
+              if (
+                requestId ===
+                liveTranslationRequestRef.current
+              ) {
+                console.warn(
+                  "Live translation preview unavailable:",
+                  error
+                );
+              }
+            }
+          }, LIVE_TRANSLATION_DEBOUNCE_MS);
+      },
+      [inputMode, targetLang]
+    );
+
 
   /*
     SPEECH RECOGNITION
@@ -250,134 +570,57 @@ const [
     };
 
     rec.onresult = (event) => {
-  let finalText = "";
-  let interimText = "";
+      let finalText = "";
+      let interimText = "";
 
-  for (
-    let i = event.resultIndex;
-    i < event.results.length;
-    i++
-  ) {
-    const transcript =
-      event.results[i][0].transcript.trim();
+      for (
+        let i = event.resultIndex;
+        i < event.results.length;
+        i++
+      ) {
+        const transcript =
+          event.results[i][0].transcript.trim();
 
-    if (
-      event.results[i].isFinal
-    ) {
-      finalText += transcript + " ";
-    } else {
-      interimText += transcript + " ";
-    }
-  }
+        if (
+          event.results[i].isFinal
+        ) {
+          finalText += transcript + " ";
+        } else {
+          interimText += transcript + " ";
+        }
+      }
 
-  if (finalText.trim()) {
+      const cleanInterimText =
+        interimText.trim();
 
+      if (cleanInterimText) {
+        cancelLiveSpeechClear();
+        setInterimCaption(
+          cleanInterimText
+        );
+        queueLiveTranslationPreview(
+          cleanInterimText
+        );
+      }
 
-  // ===============================
-  // 1. SAVE PERMANENT TRANSCRIPT
-  // ===============================
+      if (finalText.trim()) {
+        ingestFinalizedTranscriptSegment(
+          finalText
+        );
+      }
+    };
 
-  setSessionTranscript((previous) => {
+    rec.onspeechstart = () => {
+      cancelLiveSpeechClear();
+    };
 
-    const updatedText =
-      `${previous} ${finalText}`.trim();
+    rec.onspeechend = () => {
+      scheduleLiveSpeechClear();
+    };
 
-
-    const words =
-      updatedText.split(/\s+/);
-
-
-    const cleanedWords =
-      words.filter(
-        (word, index) =>
-          word.toLowerCase() !==
-          words[index - 1]?.toLowerCase()
-      );
-
-
-    return cleanedWords.join(" ");
-
-  });
-
-
-
-  // ===============================
-  // 2. LIVE CAPTION DISPLAY ONLY
-  // ===============================
-
-  setCaption(
-    finalText.trim()
-  );
-
-
-
-  // ===============================
-  // 3. CLEAR INTERIM
-  // ===============================
-
-  setInterimCaption("");
-
-  if (liveTranslationClearTimerRef.current) {
-    clearTimeout(liveTranslationClearTimerRef.current);
-    liveTranslationClearTimerRef.current = null;
-  }
-
-  setLiveTranslation("");
-
-
-
-  // ===============================
-  // 4. RESET SILENCE TIMER
-  // ===============================
-
-  if (silenceTimerRef.current) {
-
-    clearTimeout(
-      silenceTimerRef.current
-    );
-
-  }
-
-
-
-silenceTimerRef.current =
-  setTimeout(() => {
-
-
-    // CLEAR ONLY LIVE DISPLAY
-
-    setCaption("");
-
-    setInterimCaption("");
-
-    if (liveTranslationClearTimerRef.current) {
-      clearTimeout(liveTranslationClearTimerRef.current);
-      liveTranslationClearTimerRef.current = null;
-    }
-
-    setLiveTranslation("");
-
-
-    /*
-      Reset the last FSL match after the
-      current speech has finished.
-
-      This allows the same phrase to be
-      detected again in a new utterance.
-    */
-    lastMatchKeyRef.current =
-      null;
-
-
-  }, 3000);
-
-
-}
-
-  setInterimCaption(
-    interimText.trim()
-  );
-};
+    rec.onsoundend = () => {
+      scheduleLiveSpeechClear();
+    };
 
     rec.onerror = (event) => {
   console.error(
@@ -439,6 +682,14 @@ silenceTimerRef.current =
       shouldBeListeningRef.current =
         false;
 
+      rec.onstart = null;
+      rec.onresult = null;
+      rec.onerror = null;
+      rec.onend = null;
+      rec.onspeechstart = null;
+      rec.onspeechend = null;
+      rec.onsoundend = null;
+
       try {
         rec.stop();
       } catch (error) {
@@ -451,118 +702,135 @@ silenceTimerRef.current =
   }, [
     speechRecognitionLanguage,
     addToast,
+    cancelLiveSpeechClear,
+    ingestFinalizedTranscriptSegment,
+    queueLiveTranslationPreview,
+    scheduleLiveSpeechClear,
   ]);
 
    /*
     FSL MATCHING
 
-    IMPORTANT:
-    Only finalized speech is used for FSL
-    detection.
+    FSL detection uses the newest available
+    speech text so the clip can appear while
+    the user is still speaking.
 
-    Interim speech is intentionally excluded
-    so the same phrase is not detected twice
-    while the browser is still building the
-    final transcript.
+    Interim speech is used only as a live
+    detection signal. The existing duplicate
+    guard prevents the later finalized result
+    from playing the same FSL clip again.
+    Finalized speech remains the source used
+    by the shared transcript and translation
+    flow.
   */
   useEffect(() => {
+    const fslDetectionText =
+      interimCaption.trim() ||
+      caption.trim();
 
-    if (!caption.trim()) {
+    if (!fslDetectionText) {
       return;
     }
 
-
-    const match =
-      findLatestFslMatch(
-        caption
+    const matches =
+      findAllFslMatches(
+        fslDetectionText
       );
 
-
-    if (!match) {
+    if (!matches.length) {
       return;
     }
 
+    /*
+      Once an FSL phrase is detected, let the FSL playback queue control
+      the end of the current live display. This prevents the normal
+      speech-silence timer and the translation preview timer from clearing
+      the caption/translation while a detected FSL clip is still playing.
+    */
+    cancelLiveSpeechClear();
 
-    const matchKey =
-      `${match.phrase.id}-${match.index}`;
-
-
-    if (
-      lastMatchKeyRef.current ===
-      matchKey
-    ) {
-      return;
+    if (liveTranslationClearTimerRef.current) {
+      clearTimeout(
+        liveTranslationClearTimerRef.current
+      );
+      liveTranslationClearTimerRef.current =
+        null;
     }
 
+    matches.forEach((match) => {
+      const matchKey =
+        `${match.phrase.id}-${match.normalizedKeyword}-${match.occurrenceIndex}`;
 
-    lastMatchKeyRef.current =
-      matchKey;
+      if (
+        detectedFslOccurrenceKeysRef.current.has(
+          matchKey
+        )
+      ) {
+        return;
+      }
 
+      detectedFslOccurrenceKeysRef.current.add(
+        matchKey
+      );
 
-    setFslPlaybackQueue(
-      (previousQueue) => [
-        ...previousQueue,
+      setFslPlaybackQueue(
+        (previousQueue) => [
+          ...previousQueue,
+          {
+            key: matchKey,
+            phrase: match.phrase,
+          },
+        ]
+      );
 
-        {
-          key: matchKey,
-
-          phrase:
-            match.phrase,
-        },
-      ]
-    );
-
-
-    setFslHistory(
-      (previousHistory) => [
-        ...previousHistory,
-
-        {
-          key: matchKey,
-
-          phrase:
-            match.phrase.phrase,
-
-          filipino:
-            match.phrase.filipino,
-
-          detectedAt:
-            new Date().toISOString(),
-
-          // Relative position inside the saved recording.
-          // This is intentionally separate from detectedAt so older
-          // sessions remain readable while new sessions can be replayed
-          // against the audio timeline.
-          recordingOffsetSeconds:
-            recordingStartedAtRef.current
-              ? Math.max(
-                  0,
-                  (Date.now() -
-                    recordingStartedAtRef.current) /
-                    1000
-                )
-              : null,
-
-          // Keep the original millisecond field for backward compatibility
-          // with sessions saved by the first synchronized replay version.
-          recordingOffsetMs:
-            recordingStartedAtRef.current
-              ? Math.max(
-                  0,
-                  Date.now() -
-                    recordingStartedAtRef.current
-                )
-              : null,
-        },
-      ]
-    );
-
-
-  }, [caption, recordingStartedAtRef]);
+      setFslHistory(
+        (previousHistory) => [
+          ...previousHistory,
+          {
+            key: matchKey,
+            phrase:
+              match.phrase.phrase,
+            filipino:
+              match.phrase.filipino,
+            detectedAt:
+              new Date().toISOString(),
+            recordingOffsetSeconds:
+              recordingStartedAtRef.current
+                ? Math.max(
+                    0,
+                    (Date.now() -
+                      recordingStartedAtRef.current) /
+                      1000
+                  )
+                : null,
+            recordingOffsetMs:
+              recordingStartedAtRef.current
+                ? Math.max(
+                    0,
+                    Date.now() -
+                      recordingStartedAtRef.current
+                  )
+                : null,
+          },
+        ]
+      );
+    });
+  }, [
+    caption,
+    interimCaption,
+    recordingStartedAtRef,
+    cancelLiveSpeechClear,
+  ]);
 
   /*
     Play detected FSL clips one at
     a time in the order detected.
+
+    IMPORTANT:
+    A phrase can be detected and saved to FSL History even when its
+    corresponding video is not actually available. Such an item must NOT
+    block the playback queue. Skip unavailable items and continue with the
+    next playable FSL clip.
   */
   useEffect(() => {
     if (
@@ -572,10 +840,29 @@ silenceTimerRef.current =
       return;
     }
 
-    const [
-      nextItem,
-      ...remainingItems
-    ] = fslPlaybackQueue;
+    const playableIndex =
+      fslPlaybackQueue.findIndex(
+        (item) =>
+          Boolean(
+            item?.phrase?.video
+          )
+      );
+
+    // Keep unavailable phrases in FSL History, but never let them occupy
+    // the floating player or block the next available clip.
+    if (playableIndex === -1) {
+      setFslPlaybackQueue([]);
+      return;
+    }
+
+    const nextItem =
+      fslPlaybackQueue[playableIndex];
+
+    const remainingItems =
+      fslPlaybackQueue.filter(
+        (_, index) =>
+          index !== playableIndex
+      );
 
     setDetectedFslPhrase(
       nextItem
@@ -584,20 +871,6 @@ silenceTimerRef.current =
     setFslPlaybackQueue(
       remainingItems
     );
-
-    /*
-      A phrase without a verified
-      video stays visible for six
-      seconds before the next item.
-    */
-    if (!nextItem.phrase.video) {
-      fslClearTimerRef.current =
-        setTimeout(() => {
-          setDetectedFslPhrase(
-            null
-          );
-        }, 6000);
-    }
   }, [
     detectedFslPhrase,
     fslPlaybackQueue,
@@ -620,8 +893,46 @@ silenceTimerRef.current =
           liveTranslationClearTimerRef.current
         );
       }
+
+      if (
+        liveTranslationDebounceTimerRef.current
+      ) {
+        clearTimeout(
+          liveTranslationDebounceTimerRef.current
+        );
+      }
+
+      if (silenceTimerRef.current) {
+        clearTimeout(
+          silenceTimerRef.current
+        );
+      }
     };
   }, []);
+
+  const handleClassroomInterimTranscript =
+    useCallback(
+      (text) => {
+        const cleanText =
+          String(text || "")
+            .trim()
+            .replace(/\s+/g, " ");
+
+        if (!cleanText) {
+          return;
+        }
+
+        cancelLiveSpeechClear();
+        setInterimCaption(cleanText);
+        queueLiveTranslationPreview(
+          cleanText
+        );
+      },
+      [
+        cancelLiveSpeechClear,
+        queueLiveTranslationPreview,
+      ]
+    );
 
     /*
     TRANSLATION QUEUE
@@ -650,6 +961,9 @@ silenceTimerRef.current =
 
         const segmentId =
           ++translationSegmentSequenceRef.current;
+
+        const liveDisplayRequestId =
+          liveTranslationRequestRef.current;
 
         const sourceMode =
           inputMode;
@@ -726,31 +1040,31 @@ silenceTimerRef.current =
                   result.trim();
 
                 // Keep the complete cumulative translation for saving/History.
+                // Update the ref first so Save Session can read the newest
+                // translation even before React finishes rendering it.
+                const existingTranslated =
+                  String(
+                    translatedRef.current || ""
+                  ).trim();
+
+                const nextTranslated =
+                  existingTranslated
+                    ? `${existingTranslated} ${cleanResult}`.trim()
+                    : cleanResult;
+
+                translatedRef.current =
+                  nextTranslated;
+
                 setTranslated(
-                  (previous) => {
-
-                    const existing =
-                      String(
-                        previous || ""
-                      ).trim();
-
-
-                    if (!existing) {
-                      return cleanResult;
-                    }
-
-
-                    return (
-                      `${existing} ${cleanResult}`
-                    ).trim();
-
-                  }
+                  nextTranslated
                 );
 
                 // Show only the newest translated speech in the live UI.
                 if (
                   segmentId ===
-                  translationSegmentSequenceRef.current
+                    translationSegmentSequenceRef.current &&
+                  liveDisplayRequestId ===
+                    liveTranslationRequestRef.current
                 ) {
                   setLiveTranslation(
                     cleanResult
@@ -769,7 +1083,7 @@ silenceTimerRef.current =
                       setLiveTranslation("");
                       liveTranslationClearTimerRef.current =
                         null;
-                    }, 3000);
+                    }, LIVE_TRANSLATION_CLEAR_MS);
 
                   setTranslationStatus("");
                 }
@@ -892,6 +1206,7 @@ silenceTimerRef.current =
         Promise.resolve();
 
 
+      translatedRef.current = "";
       setTranslated("");
 
       if (liveTranslationClearTimerRef.current) {
@@ -936,8 +1251,7 @@ silenceTimerRef.current =
     setDetectedFslPhrase(null);
     setFslPlaybackQueue([]);
 
-    lastMatchKeyRef.current =
-      null;
+    detectedFslOccurrenceKeysRef.current.clear();
 
     if (
       fslClearTimerRef.current
@@ -967,8 +1281,12 @@ silenceTimerRef.current =
 
 setInterimCaption("");
 
+sessionTranscriptRef.current = "";
+lastIngestedSegmentRef.current = "";
+
 setSessionTranscript("");
 
+translatedRef.current = "";
 setTranslated("");
 
 if (liveTranslationClearTimerRef.current) {
@@ -976,6 +1294,12 @@ if (liveTranslationClearTimerRef.current) {
   liveTranslationClearTimerRef.current = null;
 }
 
+if (liveTranslationDebounceTimerRef.current) {
+  clearTimeout(liveTranslationDebounceTimerRef.current);
+  liveTranslationDebounceTimerRef.current = null;
+}
+
+liveTranslationRequestRef.current++;
 setLiveTranslation("");
 
 setTranslationStatus("");
@@ -997,7 +1321,16 @@ translationQueueRef.current =
   Promise.resolve();
 
 
-await startRecording();
+const classroomAudioStream =
+      classroomAudioStreamRef.current;
+
+    if (classroomAudioStream) {
+      await startRecording(
+        classroomAudioStream
+      );
+    } else {
+      await startRecording();
+    }
 
   };
 
@@ -1032,6 +1365,7 @@ await startRecording();
       setCaption("");
       setInterimCaption("");
       setTranslationStatus("");
+      lastIngestedSegmentRef.current = "";
 
       resetFslPlayback();
 
@@ -1069,6 +1403,20 @@ await startRecording();
 
   setInterimCaption("");
 
+  if (silenceTimerRef.current) {
+    clearTimeout(silenceTimerRef.current);
+    silenceTimerRef.current = null;
+  }
+
+  if (liveTranslationDebounceTimerRef.current) {
+    clearTimeout(liveTranslationDebounceTimerRef.current);
+    liveTranslationDebounceTimerRef.current = null;
+  }
+
+  liveTranslationRequestRef.current++;
+  detectedFslOccurrenceKeysRef.current.clear();
+
+  translatedRef.current = "";
   setTranslated("");
 
   if (liveTranslationClearTimerRef.current) {
@@ -1079,6 +1427,7 @@ await startRecording();
   setLiveTranslation("");
 
   setTranslationStatus("");
+  lastIngestedSegmentRef.current = "";
 
   resetFslPlayback();
 
@@ -1123,15 +1472,59 @@ await startRecording();
       }
 
       /*
-        Short natural pause before
-        the next queued clip.
+        Short natural pause before the next queued clip.
+
+        If there is no next FSL clip waiting, this was the final clip for
+        the current live utterance. Clear the live caption and translation
+        only after the final FSL video has finished.
       */
+      const hasQueuedFsl =
+        fslPlaybackQueue.length > 0;
+
       fslClearTimerRef.current =
         setTimeout(() => {
           setDetectedFslPhrase(
             null
           );
+
+          if (!hasQueuedFsl) {
+            clearLiveSpeechDisplay();
+          }
+
+          fslClearTimerRef.current =
+            null;
         }, 350);
+    };
+
+  const handleDetectedFslVideoError =
+    () => {
+      /*
+        A phrase may have a video path in the phrase catalog while the
+        actual file is missing/unavailable. Do not let that failed player
+        block later FSL clips. The phrase remains in FSL History because
+        detection and video availability are intentionally separate.
+      */
+      console.warn(
+        "FSL video unavailable; skipping to the next detected phrase."
+      );
+
+      if (
+        fslClearTimerRef.current
+      ) {
+        clearTimeout(
+          fslClearTimerRef.current
+        );
+        fslClearTimerRef.current =
+          null;
+      }
+
+      setDetectedFslPhrase(
+        null
+      );
+
+      if (fslPlaybackQueue.length === 0) {
+        clearLiveSpeechDisplay();
+      }
     };
 
   const handleInputModeChange =
@@ -1159,6 +1552,21 @@ await startRecording();
 
       setCaption("");
       setInterimCaption("");
+
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+
+      if (liveTranslationDebounceTimerRef.current) {
+        clearTimeout(liveTranslationDebounceTimerRef.current);
+        liveTranslationDebounceTimerRef.current = null;
+      }
+
+      liveTranslationRequestRef.current++;
+      detectedFslOccurrenceKeysRef.current.clear();
+
+      translatedRef.current = "";
       setTranslated("");
 
       if (liveTranslationClearTimerRef.current) {
@@ -1206,6 +1614,43 @@ const saveSession = async () => {
     const finalRecordingUrl =
       await waitForUpload();
 
+    // Wait for any translation already queued by the finalized transcript.
+    // This prevents Save Session from capturing an empty/stale translation
+    // while the provider request is still finishing.
+    try {
+      await translationQueueRef.current;
+    } catch (error) {
+      console.warn(
+        "Waiting for translation before save failed:",
+        error
+      );
+    }
+
+    /*
+      Use the synchronous transcript and translation refs first. Classroom
+      recognition can finalize a segment immediately before Save Session,
+      while React state may still be one render behind.
+    */
+    const finalTranscript =
+      String(
+        sessionTranscriptRef.current ||
+          sessionTranscript ||
+          caption ||
+          interimCaption ||
+          ""
+      )
+        .trim()
+        .replace(/\s+/g, " ");
+
+    const finalTranslated =
+      String(
+        translatedRef.current ||
+          translated ||
+          ""
+      )
+        .trim()
+        .replace(/\s+/g, " " );
+
 
     await addDoc(
       collection(
@@ -1224,9 +1669,10 @@ const saveSession = async () => {
         context,
 
         captions:
-          sessionTranscript || caption || "",
+          finalTranscript,
 
-        translated,
+        translated:
+          finalTranslated,
 
         fslHistory,
 
@@ -1278,8 +1724,11 @@ const saveSession = async () => {
 
     setInterimCaption("");
 
+    sessionTranscriptRef.current = "";
+
     setSessionTranscript("");
 
+    translatedRef.current = "";
     setTranslated("");
 
     if (liveTranslationClearTimerRef.current) {
@@ -1428,6 +1877,11 @@ const saveSession = async () => {
       ? stopRecording
       : handleStartRecording
   }
+  title={
+    classroomAudioStreamRef.current
+      ? "Record the connected classroom audio source."
+      : "Record from the direct microphone."
+  }
 >
     {
       isRecording
@@ -1517,6 +1971,7 @@ const saveSession = async () => {
             onChange={
               handleInputModeChange
             }
+            disabled={classroomAudioActive}
             style={{
               width: "100%",
             }}
@@ -1630,6 +2085,12 @@ const saveSession = async () => {
               : "btn start"
           }
           onClick={toggleListen}
+          disabled={classroomAudioActive}
+          title={
+            classroomAudioActive
+              ? "Stop Classroom Audio before using the microphone mode."
+              : "Start or stop direct microphone listening."
+          }
         >
           {listening ? (
             <>
@@ -1654,7 +2115,44 @@ const saveSession = async () => {
 
       </div>
 
-            <div className="caption-box scrollable">
+            <ClassroomAudioAdapter
+        speechRecognitionLanguage={
+          speechRecognitionLanguage
+        }
+        onFinalTranscript={
+          ingestFinalizedTranscriptSegment
+        }
+        onInterimTranscript={
+          handleClassroomInterimTranscript
+        }
+        onSpeechEnd={
+          scheduleLiveSpeechClear
+        }
+        onSpeechStart={
+          cancelLiveSpeechClear
+        }
+        disabled={listening}
+        onActiveChange={
+          setClassroomAudioActive
+        }
+        onAudioStreamChange={
+          (stream) => {
+            classroomAudioStreamRef.current =
+              stream;
+
+            setExternalRecordingStream(
+              stream
+            ).catch((error) => {
+              console.error(
+                "Classroom recording source error:",
+                error
+              );
+            });
+          }
+        }
+      />
+
+      <div className="caption-box scrollable">
         {fullCaption || (
           <>
             <FaHeadphones />
@@ -1743,6 +2241,9 @@ const saveSession = async () => {
                 }
                 onEnded={
                   handleDetectedFslVideoEnd
+                }
+                onError={
+                  handleDetectedFslVideoError
                 }
                 style={{
                   display: "block",
@@ -2257,17 +2758,17 @@ function decodeHtmlEntities(
 /*
   FSL MATCHING
 */
-function findLatestFslMatch(
+function findAllFslMatches(
   text
 ) {
   if (!text?.trim()) {
-    return null;
+    return [];
   }
 
   const normalizedText =
     normalizeText(text);
 
-  let bestMatch = null;
+  const candidates = [];
 
   fslPhrases.forEach(
     (phraseItem) => {
@@ -2295,31 +2796,18 @@ function findLatestFslMatch(
             );
 
           positions.forEach(
-            (index) => {
-              const candidate = {
-                phrase:
-                  phraseItem,
-
+            (index, occurrenceIndex) => {
+              candidates.push({
+                phrase: phraseItem,
                 index,
-
+                endIndex:
+                  index +
+                  normalizedKeyword.length,
                 keywordLength:
                   normalizedKeyword.length,
-              };
-
-              if (
-                !bestMatch ||
-                candidate.index >
-                  bestMatch.index ||
-                (
-                  candidate.index ===
-                    bestMatch.index &&
-                  candidate.keywordLength >
-                    bestMatch.keywordLength
-                )
-              ) {
-                bestMatch =
-                  candidate;
-              }
+                normalizedKeyword,
+                occurrenceIndex,
+              });
             }
           );
         }
@@ -2327,7 +2815,36 @@ function findLatestFslMatch(
     }
   );
 
-  return bestMatch;
+  candidates.sort(
+    (first, second) => {
+      if (first.index !== second.index) {
+        return first.index - second.index;
+      }
+
+      return (
+        second.keywordLength -
+        first.keywordLength
+      );
+    }
+  );
+
+  // Prefer the longest phrase at an overlapping location. For example,
+  // "thank you very much" should win over the shorter "thank you" match.
+  const accepted = [];
+
+  candidates.forEach((candidate) => {
+    const overlaps = accepted.some(
+      (existing) =>
+        candidate.index < existing.endIndex &&
+        candidate.endIndex > existing.index
+    );
+
+    if (!overlaps) {
+      accepted.push(candidate);
+    }
+  });
+
+  return accepted;
 }
 
 function normalizeText(text) {
