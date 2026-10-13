@@ -64,13 +64,39 @@ const {
   const [classroomRoomCode, setClassroomRoomCode] =
     useState("");
 
-  const [dhhResponses, setDhhResponses] =
+  const [, setDhhResponses] =
     useState([]);
+
+  // Synchronous classroom-response mirror used by Save Session. The live
+  // response feed can update asynchronously, so saving from React state
+  // alone can miss the newest response.
+  const dhhResponsesRef = useRef([]);
+  const classroomRoomCodeRef = useRef("");
+  const sessionClassroomRoomCodeRef = useRef("");
 
   const handleClassroomStateChange = useCallback(
     ({ roomCode = "", responses = [] } = {}) => {
-      setClassroomRoomCode(String(roomCode || ""));
-      setDhhResponses(Array.isArray(responses) ? responses : []);
+      const nextRoomCode = String(roomCode || "");
+      const nextResponses = Array.isArray(responses) ? responses : [];
+
+      // A different classroom room starts a new classroom-response feed.
+      if (
+        nextRoomCode &&
+        classroomRoomCodeRef.current &&
+        classroomRoomCodeRef.current !== nextRoomCode
+      ) {
+        dhhResponsesRef.current = [];
+      }
+
+      classroomRoomCodeRef.current = nextRoomCode;
+
+      if (nextRoomCode) {
+        sessionClassroomRoomCodeRef.current = nextRoomCode;
+        dhhResponsesRef.current = nextResponses;
+      }
+
+      setClassroomRoomCode(nextRoomCode);
+      setDhhResponses(nextResponses);
     },
     []
   );
@@ -139,6 +165,11 @@ const [
   fslHistory,
   setFslHistory,
 ] = useState([]);
+
+  // Synchronous FSL history mirror used by Save Session so the latest
+  // detected event is persisted even if React has not rendered the state
+  // update yet.
+  const fslHistoryRef = useRef([]);
 
   const recognitionRef =
     useRef(null);
@@ -282,9 +313,12 @@ const [
       restoredTranslation
     );
 
-    setFslHistory(
-  data.fslHistory || []
-);
+    const restoredFslHistory = Array.isArray(data.fslHistory)
+      ? data.fslHistory
+      : [];
+
+    fslHistoryRef.current = restoredFslHistory;
+    setFslHistory(restoredFslHistory);
 
   }
 
@@ -798,10 +832,7 @@ const [
         ]
       );
 
-      setFslHistory(
-        (previousHistory) => [
-          ...previousHistory,
-          {
+      const nextFslHistoryItem = {
             key: matchKey,
             phrase:
               match.phrase.phrase,
@@ -826,9 +857,14 @@ const [
                       recordingStartedAtRef.current
                   )
                 : null,
-          },
-        ]
-      );
+          };
+
+      fslHistoryRef.current = [
+        ...fslHistoryRef.current,
+        nextFslHistoryItem,
+      ];
+
+      setFslHistory(fslHistoryRef.current);
     });
   }, [
     caption,
@@ -1319,6 +1355,7 @@ setLiveTranslation("");
 
 setTranslationStatus("");
 
+fslHistoryRef.current = [];
 setFslHistory([]);
 
 resetFslPlayback();
@@ -1336,7 +1373,14 @@ translationQueueRef.current =
   Promise.resolve();
 
 
-const classroomAudioStream =
+// A new recording starts a fresh classroom-history boundary as well.
+    dhhResponsesRef.current = [];
+    sessionClassroomRoomCodeRef.current =
+      classroomRoomCodeRef.current ||
+      classroomRoomCode ||
+      "";
+
+    const classroomAudioStream =
       classroomAudioStreamRef.current;
 
     if (classroomAudioStream) {
@@ -1689,7 +1733,7 @@ const saveSession = async () => {
         translated:
           finalTranslated,
 
-        fslHistory,
+        fslHistory: fslHistoryRef.current,
 
         recordingUrl:
           finalRecordingUrl ||
@@ -1705,10 +1749,13 @@ const saveSession = async () => {
         sessionStatus:
           "completed",
 
-        classroomRoomCode: classroomRoomCode || "",
+        classroomRoomCode:
+          sessionClassroomRoomCodeRef.current ||
+          classroomRoomCode ||
+          "",
 
-        dhhResponses: Array.isArray(dhhResponses)
-          ? dhhResponses.map((response) => ({
+        dhhResponses: Array.isArray(dhhResponsesRef.current)
+          ? dhhResponsesRef.current.map((response) => ({
               id: response?.id || "",
               userId: response?.userId || "",
               displayName:
@@ -1769,7 +1816,14 @@ const saveSession = async () => {
 
     setTranslationStatus("");
 
+    fslHistoryRef.current = [];
     setFslHistory([]);
+
+    dhhResponsesRef.current = [];
+    sessionClassroomRoomCodeRef.current = "";
+    classroomRoomCodeRef.current = "";
+    setDhhResponses([]);
+    setClassroomRoomCode("");
 
     resetFslPlayback();
 

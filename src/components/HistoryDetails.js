@@ -1043,11 +1043,10 @@ function HistoryDetails({
         <div className="content-box">
 
           {
-
             session.captions ||
-
+            session.sessionTranscript ||
+            session.transcript ||
             "No transcript available."
-
           }
 
         </div>
@@ -1075,11 +1074,9 @@ function HistoryDetails({
         <div className="content-box">
 
           {
-
             session.translated ||
-
+            session.translation ||
             "No translation available."
-
           }
 
         </div>
