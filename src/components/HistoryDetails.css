@@ -729,3 +729,19 @@
         flex-direction: column;
     }
 }
+
+
+/* Saved classroom conversation */
+.classroom-conversation-card { overflow: hidden; }
+.classroom-conversation-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+.classroom-conversation-heading h3 { margin-bottom:5px; }
+.classroom-conversation-subtitle { margin:0 !important; color:#9fc2b8 !important; font-size:12px !important; line-height:1.5; }
+.classroom-conversation-room { flex:0 0 auto; padding:8px 12px; border:1px solid rgba(24,212,155,.45); border-radius:999px; color:#18d49b; font-size:12px; font-weight:700; white-space:nowrap; }
+.classroom-conversation-list { display:flex; flex-direction:column; gap:9px; margin-top:14px; }
+.classroom-conversation-item { padding:12px 13px; border:1px solid rgba(255,255,255,.08); border-radius:10px; background:rgba(0,0,0,.12); }
+.classroom-conversation-meta { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px; }
+.classroom-conversation-meta strong { color:#fff; font-size:13px; overflow-wrap:anywhere; }
+.classroom-conversation-meta span { color:#8fb5aa; font-size:10px; text-align:right; white-space:nowrap; }
+.classroom-conversation-text { color:#fff; font-size:13px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+.classroom-conversation-empty { margin-top:14px; padding:14px; border-radius:10px; background:rgba(0,0,0,.12); color:#9fc2b8; font-size:12px; line-height:1.5; }
+@media (max-width:600px) { .classroom-conversation-heading{flex-direction:column;} .classroom-conversation-room{align-self:flex-start;} .classroom-conversation-meta{align-items:flex-start;flex-direction:column;gap:3px;} .classroom-conversation-meta span{text-align:left;white-space:normal;} }

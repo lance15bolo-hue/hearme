@@ -264,6 +264,15 @@ function HistoryDetails({
 
 
 
+  const dhhResponses = useMemo(
+    () =>
+      Array.isArray(session?.dhhResponses)
+        ? session.dhhResponses
+        : [],
+    [session?.dhhResponses]
+  );
+
+
   const replayItems = useMemo(() => {
 
     return fslHistory.map((item, index) => {
@@ -970,6 +979,55 @@ function HistoryDetails({
 
 
 
+      {(session.classroomRoomCode || dhhResponses.length > 0) && (
+
+        <section className="details-card classroom-conversation-card">
+          <div className="classroom-conversation-heading">
+            <div>
+              <h3>💬 Classroom Conversation</h3>
+              <p className="classroom-conversation-subtitle">
+                Saved typed responses exchanged during this classroom session.
+              </p>
+            </div>
+
+            {session.classroomRoomCode && (
+              <span className="classroom-conversation-room">
+                Room {session.classroomRoomCode}
+              </span>
+            )}
+          </div>
+
+          {dhhResponses.length > 0 ? (
+            <div className="classroom-conversation-list">
+              {dhhResponses.map((response, index) => (
+                <div
+                  key={response?.id || `${index}-${response?.createdAt || "response"}`}
+                  className="classroom-conversation-item"
+                >
+                  <div className="classroom-conversation-meta">
+                    <strong>
+                      {response?.displayName || "Classroom participant"}
+                    </strong>
+                    <span>
+                      {formatDetectedTime(response?.createdAt) || "Time unavailable"}
+                    </span>
+                  </div>
+                  <div className="classroom-conversation-text">
+                    {response?.text || "No response text available."}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="classroom-conversation-empty">
+              No typed classroom responses were saved for this session.
+            </div>
+          )}
+        </section>
+
+      )}
+
+
       <section className="details-card">
 
 
@@ -987,7 +1045,6 @@ function HistoryDetails({
           {
 
             session.captions ||
-            session.sessionTranscript ||
 
             "No transcript available."
 

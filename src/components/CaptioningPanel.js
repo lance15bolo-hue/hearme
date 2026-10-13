@@ -60,6 +60,21 @@ const {
   const [classroomAudioActive, setClassroomAudioActive] =
     useState(false);
 
+  // Classroom response state supplied by DhhResponseAssistant.
+  const [classroomRoomCode, setClassroomRoomCode] =
+    useState("");
+
+  const [dhhResponses, setDhhResponses] =
+    useState([]);
+
+  const handleClassroomStateChange = useCallback(
+    ({ roomCode = "", responses = [] } = {}) => {
+      setClassroomRoomCode(String(roomCode || ""));
+      setDhhResponses(Array.isArray(responses) ? responses : []);
+    },
+    []
+  );
+
   // Audio stream supplied by the classroom adapter. It is used only when
   // the user starts a recording while classroom audio is active.
   const classroomAudioStreamRef = useRef(null);
@@ -124,11 +139,6 @@ const [
   fslHistory,
   setFslHistory,
 ] = useState([]);
-
-  // Synchronous mirror of the saved FSL detection history.
-  // React state can still be one render behind when the user saves immediately
-  // after an FSL phrase is detected, so Save Session reads this ref first.
-  const fslHistoryRef = useRef([]);
 
   const recognitionRef =
     useRef(null);
@@ -272,17 +282,9 @@ const [
       restoredTranslation
     );
 
-    const restoredFslHistory =
-      Array.isArray(data.fslHistory)
-        ? data.fslHistory
-        : [];
-
-    fslHistoryRef.current =
-      restoredFslHistory;
-
     setFslHistory(
-      restoredFslHistory
-    );
+  data.fslHistory || []
+);
 
   }
 
@@ -796,43 +798,36 @@ const [
         ]
       );
 
-      const historyItem = {
-        key: matchKey,
-        phrase:
-          match.phrase.phrase,
-        filipino:
-          match.phrase.filipino,
-        detectedAt:
-          new Date().toISOString(),
-        recordingOffsetSeconds:
-          recordingStartedAtRef.current
-            ? Math.max(
-                0,
-                (Date.now() -
-                  recordingStartedAtRef.current) /
-                  1000
-              )
-            : null,
-        recordingOffsetMs:
-          recordingStartedAtRef.current
-            ? Math.max(
-                0,
-                Date.now() -
-                  recordingStartedAtRef.current
-              )
-            : null,
-      };
-
-      const nextFslHistory = [
-        ...fslHistoryRef.current,
-        historyItem,
-      ];
-
-      fslHistoryRef.current =
-        nextFslHistory;
-
       setFslHistory(
-        nextFslHistory
+        (previousHistory) => [
+          ...previousHistory,
+          {
+            key: matchKey,
+            phrase:
+              match.phrase.phrase,
+            filipino:
+              match.phrase.filipino,
+            detectedAt:
+              new Date().toISOString(),
+            recordingOffsetSeconds:
+              recordingStartedAtRef.current
+                ? Math.max(
+                    0,
+                    (Date.now() -
+                      recordingStartedAtRef.current) /
+                      1000
+                  )
+                : null,
+            recordingOffsetMs:
+              recordingStartedAtRef.current
+                ? Math.max(
+                    0,
+                    Date.now() -
+                      recordingStartedAtRef.current
+                  )
+                : null,
+          },
+        ]
       );
     });
   }, [
@@ -1694,8 +1689,7 @@ const saveSession = async () => {
         translated:
           finalTranslated,
 
-        fslHistory:
-          fslHistoryRef.current,
+        fslHistory,
 
         recordingUrl:
           finalRecordingUrl ||
@@ -1710,6 +1704,20 @@ const saveSession = async () => {
 
         sessionStatus:
           "completed",
+
+        classroomRoomCode: classroomRoomCode || "",
+
+        dhhResponses: Array.isArray(dhhResponses)
+          ? dhhResponses.map((response) => ({
+              id: response?.id || "",
+              userId: response?.userId || "",
+              displayName:
+                response?.displayName ||
+                "Classroom participant",
+              text: String(response?.text || ""),
+              createdAt: response?.createdAt || null,
+            }))
+          : [],
 
         createdAt:
           serverTimestamp(),
@@ -1761,7 +1769,6 @@ const saveSession = async () => {
 
     setTranslationStatus("");
 
-    fslHistoryRef.current = [];
     setFslHistory([]);
 
     resetFslPlayback();
@@ -2310,7 +2317,11 @@ const saveSession = async () => {
         )}
       </div>
 
-        <DhhResponseAssistant />
+        <DhhResponseAssistant
+          onClassroomStateChange={
+            handleClassroomStateChange
+          }
+        />
 
     </section>
   );

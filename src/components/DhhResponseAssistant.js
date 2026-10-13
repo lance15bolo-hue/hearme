@@ -40,7 +40,7 @@ import "./DhhResponseAssistant.css";
   text, and plays the corresponding pre-recorded
   FSL resources when available.
 */
-export default function DhhResponseAssistant() {
+export default function DhhResponseAssistant({ onClassroomStateChange }) {
   const [responseText, setResponseText] =
     useState("");
 
@@ -119,6 +119,10 @@ export default function DhhResponseAssistant() {
     sharedResponseFeedInitializedRef.current = false;
 
     if (!joinedRoomCode) {
+      onClassroomStateChange?.({
+        roomCode: "",
+        responses: [],
+      });
       return undefined;
     }
 
@@ -146,6 +150,11 @@ export default function DhhResponseAssistant() {
         );
 
         setSharedResponses(responseItems);
+
+        onClassroomStateChange?.({
+          roomCode: joinedRoomCode,
+          responses: responseItems,
+        });
 
         /*
           Do not replay old classroom responses when a participant
@@ -235,7 +244,7 @@ export default function DhhResponseAssistant() {
     );
 
     return () => unsubscribe();
-  }, [joinedRoomCode]);
+  }, [joinedRoomCode, onClassroomStateChange]);
 
   const handleCreateRoom = async () => {
     const currentUser = auth.currentUser;
@@ -372,6 +381,10 @@ export default function DhhResponseAssistant() {
   const handleLeaveRoom = () => {
     setJoinedRoomCode("");
     setSharedResponses([]);
+    onClassroomStateChange?.({
+      roomCode: "",
+      responses: [],
+    });
     setShareStatus("Left classroom response room.");
   };
 
