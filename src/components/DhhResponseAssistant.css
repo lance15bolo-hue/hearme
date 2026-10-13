@@ -858,3 +858,348 @@
   }
 
 }
+/* =========================================================
+   CLASSROOM RESPONSE SHARING
+   ========================================================= */
+
+.dhh-response-sharing {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.dhh-response-sharing-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.dhh-response-sharing-header h3,
+.dhh-response-shared-feed-header h3 {
+  margin: 0;
+  color: #1e3a8a;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.dhh-response-sharing-header p,
+.dhh-response-shared-feed-header p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.dhh-response-room-badge {
+  flex-shrink: 0;
+  padding: 6px 9px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  color: #2563eb;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.dhh-response-room-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+}
+
+.dhh-response-room-join {
+  display: flex;
+  flex: 1 1 280px;
+  gap: 8px;
+}
+
+.dhh-response-room-join input {
+  min-width: 0;
+  flex: 1;
+  height: 40px;
+  padding: 8px 11px;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  background: #ffffff;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.dhh-response-room-join input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.dhh-response-button.room-primary {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #ffffff;
+}
+
+.dhh-response-button.room-primary:hover {
+  background: #0d6b64;
+  border-color: #0d6b64;
+}
+
+.dhh-response-room-connected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dhh-response-room-code-line {
+  min-width: 0;
+}
+
+.dhh-response-room-code-line span {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.dhh-response-room-code-line strong {
+  display: block;
+  margin-top: 3px;
+  color: #0f766e;
+  font-size: 20px;
+  letter-spacing: 0.14em;
+}
+
+.dhh-response-room-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dhh-response-share-status {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  color: #065f46;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.dhh-response-shared-feed {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.dhh-response-shared-feed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.dhh-response-shared-feed-header > span {
+  flex-shrink: 0;
+  padding: 5px 9px;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.dhh-response-shared-feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.dhh-response-shared-item {
+  padding: 11px 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.dhh-response-shared-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.dhh-response-shared-item-meta strong {
+  color: #1f2937;
+  font-size: 12px;
+}
+
+.dhh-response-shared-item-meta span {
+  flex-shrink: 0;
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+.dhh-response-shared-item p {
+  margin: 0;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.dhh-response-shared-feed-empty {
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 9px;
+  color: #64748b;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* =========================================================
+   CLASSROOM RESPONSE SHARING — DARK MODE
+   ========================================================= */
+
+.app-root.dark-mode
+.dhh-response-sharing {
+  background: #10221a;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.app-root.dark-mode
+.dhh-response-sharing-header h3,
+.app-root.dark-mode
+.dhh-response-shared-feed-header h3 {
+  color: #e2f5ec;
+}
+
+.app-root.dark-mode
+.dhh-response-sharing-header p,
+.app-root.dark-mode
+.dhh-response-shared-feed-header p,
+.app-root.dark-mode
+.dhh-response-room-code-line span {
+  color: #9fb8ad;
+}
+
+.app-root.dark-mode
+.dhh-response-room-badge {
+  background: rgba(37, 99, 235, 0.12);
+  border-color: rgba(96, 165, 250, 0.25);
+  color: #93c5fd;
+}
+
+.app-root.dark-mode
+.dhh-response-room-join input {
+  background: #14281f;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+}
+
+.app-root.dark-mode
+.dhh-response-room-code-line strong {
+  color: #5eead4;
+}
+
+.app-root.dark-mode
+.dhh-response-share-status {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(52, 211, 153, 0.2);
+  color: #a7f3d0;
+}
+
+.app-root.dark-mode
+.dhh-response-shared-feed {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.app-root.dark-mode
+.dhh-response-shared-feed-header > span {
+  background: rgba(37, 99, 235, 0.12);
+  border-color: rgba(96, 165, 250, 0.2);
+  color: #93c5fd;
+}
+
+.app-root.dark-mode
+.dhh-response-shared-item {
+  background: #14281f;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.app-root.dark-mode
+.dhh-response-shared-item-meta strong,
+.app-root.dark-mode
+.dhh-response-shared-item p {
+  color: #f1f5f9;
+}
+
+.app-root.dark-mode
+.dhh-response-shared-item-meta span {
+  color: #71877e;
+}
+
+.app-root.dark-mode
+.dhh-response-shared-feed-empty {
+  background: #10221a;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #9fb8ad;
+}
+
+/* =========================================================
+   CLASSROOM RESPONSE SHARING — MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .dhh-response-sharing-header,
+  .dhh-response-room-connected {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dhh-response-room-badge {
+    align-self: flex-start;
+  }
+
+  .dhh-response-room-actions,
+  .dhh-response-room-join,
+  .dhh-response-room-buttons {
+    width: 100%;
+  }
+
+  .dhh-response-room-join {
+    flex-basis: auto;
+  }
+
+  .dhh-response-room-buttons .dhh-response-button,
+  .dhh-response-room-actions > .dhh-response-button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .dhh-response-room-join {
+    flex-direction: column;
+  }
+
+  .dhh-response-room-join input,
+  .dhh-response-room-join .dhh-response-button {
+    width: 100%;
+  }
+}

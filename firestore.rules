@@ -40,5 +40,51 @@ service cloud.firestore {
         && resource.data.userId == request.auth.uid;
     }
 
+
+    // Live classroom response rooms
+    match /classroomRooms/{roomId} {
+
+      // Only authenticated users can create a room they own.
+      allow create: if request.auth != null
+        && roomId.size() == 6
+        && request.resource.data.roomCode == roomId
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.active == true
+        && request.resource.data.createdAt == request.time;
+
+      // An authenticated participant may join a room when they know its code.
+      allow read: if request.auth != null;
+
+      // Only the room owner may change or remove the room.
+      allow update, delete: if request.auth != null
+        && resource.data.createdBy == request.auth.uid;
+
+      match /responses/{responseId} {
+
+        // Participants in the same room can see live responses.
+        allow read: if request.auth != null
+          && exists(
+            /databases/$(database)/documents/classroomRooms/$(roomId)
+          );
+
+        // Responses are immutable after creation and limited to the
+        // authenticated user's own text.
+        allow create: if request.auth != null
+          && exists(
+            /databases/$(database)/documents/classroomRooms/$(roomId)
+          )
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 500
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() <= 100
+          && request.resource.data.createdAt == request.time;
+
+        allow update, delete: if request.auth != null
+          && resource.data.userId == request.auth.uid;
+      }
+    }
+
   }
 }
