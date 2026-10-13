@@ -125,6 +125,11 @@ const [
   setFslHistory,
 ] = useState([]);
 
+  // Synchronous mirror of the saved FSL detection history.
+  // React state can still be one render behind when the user saves immediately
+  // after an FSL phrase is detected, so Save Session reads this ref first.
+  const fslHistoryRef = useRef([]);
+
   const recognitionRef =
     useRef(null);
 
@@ -267,9 +272,17 @@ const [
       restoredTranslation
     );
 
+    const restoredFslHistory =
+      Array.isArray(data.fslHistory)
+        ? data.fslHistory
+        : [];
+
+    fslHistoryRef.current =
+      restoredFslHistory;
+
     setFslHistory(
-  data.fslHistory || []
-);
+      restoredFslHistory
+    );
 
   }
 
@@ -783,36 +796,43 @@ const [
         ]
       );
 
+      const historyItem = {
+        key: matchKey,
+        phrase:
+          match.phrase.phrase,
+        filipino:
+          match.phrase.filipino,
+        detectedAt:
+          new Date().toISOString(),
+        recordingOffsetSeconds:
+          recordingStartedAtRef.current
+            ? Math.max(
+                0,
+                (Date.now() -
+                  recordingStartedAtRef.current) /
+                  1000
+              )
+            : null,
+        recordingOffsetMs:
+          recordingStartedAtRef.current
+            ? Math.max(
+                0,
+                Date.now() -
+                  recordingStartedAtRef.current
+              )
+            : null,
+      };
+
+      const nextFslHistory = [
+        ...fslHistoryRef.current,
+        historyItem,
+      ];
+
+      fslHistoryRef.current =
+        nextFslHistory;
+
       setFslHistory(
-        (previousHistory) => [
-          ...previousHistory,
-          {
-            key: matchKey,
-            phrase:
-              match.phrase.phrase,
-            filipino:
-              match.phrase.filipino,
-            detectedAt:
-              new Date().toISOString(),
-            recordingOffsetSeconds:
-              recordingStartedAtRef.current
-                ? Math.max(
-                    0,
-                    (Date.now() -
-                      recordingStartedAtRef.current) /
-                      1000
-                  )
-                : null,
-            recordingOffsetMs:
-              recordingStartedAtRef.current
-                ? Math.max(
-                    0,
-                    Date.now() -
-                      recordingStartedAtRef.current
-                  )
-                : null,
-          },
-        ]
+        nextFslHistory
       );
     });
   }, [
@@ -1674,7 +1694,8 @@ const saveSession = async () => {
         translated:
           finalTranslated,
 
-        fslHistory,
+        fslHistory:
+          fslHistoryRef.current,
 
         recordingUrl:
           finalRecordingUrl ||
@@ -1740,6 +1761,7 @@ const saveSession = async () => {
 
     setTranslationStatus("");
 
+    fslHistoryRef.current = [];
     setFslHistory([]);
 
     resetFslPlayback();

@@ -987,6 +987,7 @@ function HistoryDetails({
           {
 
             session.captions ||
+            session.sessionTranscript ||
 
             "No transcript available."
 
