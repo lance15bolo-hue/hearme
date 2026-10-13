@@ -80,6 +80,9 @@ export default function DhhResponseAssistant() {
 
   const videoRef = useRef(null);
 
+  const sharedResponseIdsRef = useRef(new Set());
+  const sharedResponseFeedInitializedRef = useRef(false);
+
   const activeMatch = useMemo(() => {
     if (
       activeIndex === null ||
@@ -112,6 +115,8 @@ export default function DhhResponseAssistant() {
   */
   useEffect(() => {
     setSharedResponses([]);
+    sharedResponseIdsRef.current = new Set();
+    sharedResponseFeedInitializedRef.current = false;
 
     if (!joinedRoomCode) {
       return undefined;
@@ -133,12 +138,89 @@ export default function DhhResponseAssistant() {
     const unsubscribe = onSnapshot(
       responsesQuery,
       (snapshot) => {
-        setSharedResponses(
-          snapshot.docs.map((responseDoc) => ({
+        const responseItems = snapshot.docs.map(
+          (responseDoc) => ({
             id: responseDoc.id,
             ...responseDoc.data(),
-          }))
+          })
         );
+
+        setSharedResponses(responseItems);
+
+        /*
+          Do not replay old classroom responses when a participant
+          first joins the room. Only newly added responses after the
+          initial snapshot should trigger automatic FSL playback.
+        */
+        if (!sharedResponseFeedInitializedRef.current) {
+          responseItems.forEach((item) => {
+            sharedResponseIdsRef.current.add(item.id);
+          });
+
+          sharedResponseFeedInitializedRef.current = true;
+          return;
+        }
+
+        const newlyAddedResponses = snapshot
+          .docChanges()
+          .filter((change) => change.type === "added")
+          .map((change) => ({
+            id: change.doc.id,
+            ...change.doc.data(),
+          }))
+          .filter(
+            (item) =>
+              !sharedResponseIdsRef.current.has(item.id)
+          );
+
+        newlyAddedResponses.forEach((item) => {
+          sharedResponseIdsRef.current.add(item.id);
+        });
+
+        if (newlyAddedResponses.length === 0) {
+          return;
+        }
+
+        /*
+          A shared response should behave like the local DHH response:
+          reuse the existing FSL phrase-matching logic, show the detected
+          phrases, and automatically start the available FSL sequence.
+        */
+        const latestResponse =
+          newlyAddedResponses[newlyAddedResponses.length - 1];
+
+        const matches = findAllFslMatches(
+          latestResponse.text || ""
+        );
+
+        if (matches.length === 0) {
+          return;
+        }
+
+        const nextPlayableIndexes = matches
+          .map((item, index) =>
+            item?.phrase?.video
+              ? index
+              : null
+          )
+          .filter((index) => index !== null);
+
+        setDetectedMatches(matches);
+        setStatusMessage(
+          `FSL support detected from ${
+            latestResponse.userId === auth.currentUser?.uid
+              ? "your shared response"
+              : "a classroom response"
+          }.`
+        );
+
+        if (nextPlayableIndexes.length > 0) {
+          setPlayAllActive(true);
+          setActiveIndex(nextPlayableIndexes[0]);
+        } else {
+          setPlayAllActive(false);
+          setActiveIndex(null);
+        }
       },
       (error) => {
         console.error(
