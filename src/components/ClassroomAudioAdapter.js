@@ -399,7 +399,11 @@ export default function ClassroomAudioAdapter({
       const recognition =
         new SpeechRecognition();
 
-      recognition.continuous = true;
+      // Use one browser recognition session per speech segment.
+      // Continuous mode can cause Chrome to replay prior finalized text
+      // when the recognition service rolls over, which then contaminates
+      // live captions and FSL detection.
+      recognition.continuous = false;
       recognition.interimResults = true;
       recognition.lang =
         speechRecognitionLanguage ||
@@ -427,7 +431,9 @@ export default function ClassroomAudioAdapter({
           return;
         }
 
-        flushPendingInterimTranscript();
+        // Do not flush here. In non-continuous mode Chrome normally sends
+        // the final result immediately before onend. Flushing at speechend
+        // can duplicate an interim result that is about to become final.
         onSpeechEndRef.current?.();
       };
 
@@ -436,8 +442,9 @@ export default function ClassroomAudioAdapter({
           return;
         }
 
-        flushPendingInterimTranscript();
-        onSpeechEndRef.current?.();
+        // Keep the recognition session alive until onend. The final result
+        // (when available) is handled by onresult; any remaining interim
+        // text is committed once in onend.
       };
 
       recognition.onresult = (event) => {
@@ -551,11 +558,15 @@ export default function ClassroomAudioAdapter({
       };
 
       recognition.onend = () => {
-        if (
-          !shouldBeActiveRef.current
-        ) {
+        if (!shouldBeActiveRef.current) {
           return;
         }
+
+        // If Chrome ended this recognition session without producing a final
+        // result, commit the last interim phrase once. This is the only
+        // fallback flush point, so the same interim text is not committed at
+        // both speechend and end.
+        flushPendingInterimTranscript();
 
         const currentTrack =
           audioTrackRef.current;
@@ -568,6 +579,12 @@ export default function ClassroomAudioAdapter({
           handleTrackEnded();
           return;
         }
+
+        // Start a fresh recognition session. Because continuous=false, the
+        // browser does not carry the previous result set into the next
+        // utterance. This is the primary stale-caption prevention.
+        finalizedResultKeysRef.current = new Set();
+        pendingInterimTranscriptRef.current = "";
 
         try {
           recognition.start(

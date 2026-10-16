@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import {
   FaHome,
   FaMicrophone,
-  FaHeadphones,
   FaHandPaper,
   FaComment,
   FaUser,
@@ -45,11 +44,6 @@ export default function Sidebar({
       key: "captions",
       icon: <FaMicrophone />,
       label: "Captioning",
-    },
-    {
-      key: "recorder",
-      icon: <FaHeadphones />,
-      label: "Recorder",
     },
     {
       key: "signbank",

@@ -973,10 +973,65 @@ const [
           return;
         }
 
+        const normalizeClassroomText = (value) =>
+          String(value || "")
+            .toLocaleLowerCase()
+            .replace(/[^\p{L}\p{N}]+/gu, " ")
+            .trim()
+            .replace(/\s+/g, " ");
+
+        const incomingNorm =
+          normalizeClassroomText(cleanText);
+        const previousSegment =
+          String(lastIngestedSegmentRef.current || "").trim();
+        const previousSegmentNorm =
+          normalizeClassroomText(previousSegment);
+        const savedTranscript =
+          String(sessionTranscriptRef.current || "").trim();
+        const savedTranscriptNorm =
+          normalizeClassroomText(savedTranscript);
+
+        let filteredText = cleanText;
+
+        if (
+          previousSegmentNorm &&
+          incomingNorm === previousSegmentNorm
+        ) {
+          // This is the previous finalized classroom utterance being
+          // replayed as an interim result. Do not show or FSL-match it.
+          return;
+        }
+
+        if (
+          previousSegmentNorm &&
+          incomingNorm.startsWith(previousSegmentNorm + " ")
+        ) {
+          const incomingWords = cleanText.split(/\s+/);
+          const previousWordCount = previousSegmentNorm.split(" ").length;
+          filteredText = incomingWords
+            .slice(previousWordCount)
+            .join(" ")
+            .trim();
+        } else if (
+          savedTranscriptNorm &&
+          incomingNorm.startsWith(savedTranscriptNorm + " ")
+        ) {
+          const incomingWords = cleanText.split(/\s+/);
+          const savedWordCount = savedTranscriptNorm.split(" ").length;
+          filteredText = incomingWords
+            .slice(savedWordCount)
+            .join(" ")
+            .trim();
+        }
+
+        if (!filteredText) {
+          return;
+        }
+
         cancelLiveSpeechClear();
-        setInterimCaption(cleanText);
+        setInterimCaption(filteredText);
         queueLiveTranslationPreview(
-          cleanText
+          filteredText
         );
       },
       [
