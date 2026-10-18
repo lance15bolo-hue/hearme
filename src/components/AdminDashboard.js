@@ -6,8 +6,6 @@ import {
   deleteDoc,
   doc,
   updateDoc,
-  query,
-  orderBy,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { FaWrench, FaChartBar, FaUsers, FaFileAlt } from "react-icons/fa";
@@ -26,7 +24,58 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { fslPhrases } from "./fslPhrases";
 import "./AdminDashboard.css";
+
+const getDateObject = (value) => {
+  if (!value) return null;
+
+  if (typeof value?.toDate === "function") {
+    const date = value.toDate();
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const getLocalDateKey = (value) => {
+  const date = getDateObject(value);
+  if (!date) return null;
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const formatDateTime = (value) => {
+  const date = getDateObject(value);
+  return date ? date.toLocaleString() : "N/A";
+};
+
+const isSameOrAfterToday = (value) => {
+  const date = getDateObject(value);
+  if (!date) return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return date >= today;
+};
+
+const sortByCreatedAtDescending = (items) => {
+  return [...items].sort((a, b) => {
+    const dateA = getDateObject(a.createdAt)?.getTime() || 0;
+    const dateB = getDateObject(b.createdAt)?.getTime() || 0;
+    return dateB - dateA;
+  });
+};
 
 export default function AdminDashboard({ user, addToast }) {
   const [users, setUsers] = useState([]);
@@ -34,6 +83,7 @@ export default function AdminDashboard({ user, addToast }) {
   const [transcripts, setTranscripts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [dataError, setDataError] = useState("");
 
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -43,6 +93,7 @@ export default function AdminDashboard({ user, addToast }) {
     totalLikes: 0,
     adminUsers: 0,
     regularUsers: 0,
+    fslResources: 0,
     postsPerDay: {},
   });
 
@@ -51,22 +102,65 @@ export default function AdminDashboard({ user, addToast }) {
   const [transcriptSearch, setTranscriptSearch] = useState("");
 
   const loadData = useCallback(async () => {
+    if (!user?.uid || user.role !== "admin") return;
+
     setLoading(true);
+    setDataError("");
 
     try {
-      const uSnap = await getDocs(collection(db, "users"));
-      const usersData = uSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      /*
+        IMPORTANT:
+        HearMe saves transcript/session records in `academicSessions`.
+        The old dashboard queried a non-existent `transcripts` collection,
+        which could make the entire dashboard fail to load.
 
-      const pSnap = await getDocs(
-        query(collection(db, "posts"), orderBy("createdAt", "desc"))
-      );
-      const postsData = pSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        The three reads are independent so one unavailable dataset does not
+        blank the entire dashboard.
+      */
+      const results = await Promise.allSettled([
+        getDocs(collection(db, "users")),
+        getDocs(collection(db, "posts")),
+        getDocs(collection(db, "academicSessions")),
+      ]);
 
-      const tSnap = await getDocs(collection(db, "transcripts"));
-      const transcriptsData = tSnap.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      }));
+      const [usersResult, postsResult, sessionsResult] = results;
+      const errors = [];
+
+      let usersData = [];
+      let postsData = [];
+      let transcriptsData = [];
+
+      if (usersResult.status === "fulfilled") {
+        usersData = usersResult.value.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+      } else {
+        console.error("Failed to load users:", usersResult.reason);
+        errors.push("users");
+      }
+
+      if (postsResult.status === "fulfilled") {
+        postsData = postsResult.value.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+        postsData = sortByCreatedAtDescending(postsData);
+      } else {
+        console.error("Failed to load posts:", postsResult.reason);
+        errors.push("posts");
+      }
+
+      if (sessionsResult.status === "fulfilled") {
+        transcriptsData = sessionsResult.value.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+        transcriptsData = sortByCreatedAtDescending(transcriptsData);
+      } else {
+        console.error("Failed to load academic sessions:", sessionsResult.reason);
+        errors.push("academic session history");
+      }
 
       setUsers(usersData);
       setPosts(postsData);
@@ -75,53 +169,61 @@ export default function AdminDashboard({ user, addToast }) {
       const postsPerDay = {};
 
       for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const dateKey = d.toISOString().split("T")[0];
+        const date = new Date();
+        date.setHours(0, 0, 0, 0);
+        date.setDate(date.getDate() - i);
+        const dateKey = getLocalDateKey(date);
 
-        postsPerDay[dateKey] = 0;
+        if (dateKey) {
+          postsPerDay[dateKey] = 0;
+        }
       }
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      postsData.forEach((post) => {
+        const dateKey = getLocalDateKey(post.createdAt);
 
-      postsData.forEach((p) => {
-        if (p.createdAt?.toDate) {
-          const date = p.createdAt.toDate().toISOString().split("T")[0];
-
-          if (postsPerDay[date] !== undefined) {
-            postsPerDay[date]++;
-          }
+        if (dateKey && postsPerDay[dateKey] !== undefined) {
+          postsPerDay[dateKey] += 1;
         }
       });
 
-      const totalLikes = postsData.reduce(
-        (sum, post) => sum + (post.likes || 0),
-        0
-      );
+      const totalLikes = postsData.reduce((sum, post) => {
+        const likes = Number(post.likes);
+        return sum + (Number.isFinite(likes) ? likes : 0);
+      }, 0);
 
-      const adminUsers = usersData.filter((u) => u.role === "admin").length;
-      const regularUsers = usersData.filter((u) => u.role !== "admin").length;
+      const adminUsers = usersData.filter(
+        (u) => String(u.role || "").toLowerCase() === "admin"
+      ).length;
+
+      const regularUsers = usersData.length - adminUsers;
 
       setStats({
         totalUsers: usersData.length,
         totalPosts: postsData.length,
-        todayPosts: postsData.filter(
-          (p) => p.createdAt?.toDate && p.createdAt.toDate() >= today
-        ).length,
+        todayPosts: postsData.filter((p) => isSameOrAfterToday(p.createdAt))
+          .length,
         totalTranscripts: transcriptsData.length,
         totalLikes,
         adminUsers,
         regularUsers,
+        fslResources: Array.isArray(fslPhrases) ? fslPhrases.length : 0,
         postsPerDay,
       });
+
+      if (errors.length > 0) {
+        const message = `Some admin data could not be loaded: ${errors.join(", ")}.`;
+        setDataError(message);
+        addToast && addToast(message, "error");
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load admin data:", err);
+      setDataError("Failed to load admin data. Please try again.");
       addToast && addToast("Failed to load admin data", "error");
     } finally {
       setLoading(false);
     }
-  }, [addToast]);
+  }, [user, addToast]);
 
   useEffect(() => {
     if (user) {
@@ -141,7 +243,7 @@ export default function AdminDashboard({ user, addToast }) {
 
       addToast && addToast("Post deleted", "success");
 
-      loadData();
+      await loadData();
     } catch (err) {
       console.error(err);
       addToast && addToast("Failed to delete post", "error");
@@ -166,7 +268,7 @@ export default function AdminDashboard({ user, addToast }) {
 
       addToast && addToast(`User role updated to ${newRole}`, "success");
 
-      loadData();
+      await loadData();
     } catch (err) {
       console.error(err);
       addToast && addToast("Failed to update role", "error");
@@ -188,24 +290,38 @@ export default function AdminDashboard({ user, addToast }) {
 
   if (loading) return <p>Loading admin data...</p>;
 
-  const filteredUsers = users.filter(
-    (u) =>
-      u.email?.toLowerCase().includes(userSearch.toLowerCase()) ||
-      u.displayName?.toLowerCase().includes(userSearch.toLowerCase())
-  );
+  const filteredUsers = users.filter((u) => {
+    const search = userSearch.toLowerCase();
 
-  const filteredPosts = posts.filter(
-    (p) =>
-      p.text?.toLowerCase().includes(postSearch.toLowerCase()) ||
-      p.name?.toLowerCase().includes(postSearch.toLowerCase())
-  );
+    return (
+      String(u.email || "").toLowerCase().includes(search) ||
+      String(u.displayName || "").toLowerCase().includes(search) ||
+      String(u.role || "").toLowerCase().includes(search)
+    );
+  });
 
-  const filteredTranscripts = transcripts.filter(
-    (t) =>
-      t.userId?.toLowerCase().includes(transcriptSearch.toLowerCase()) ||
-      t.postId?.toLowerCase().includes(transcriptSearch.toLowerCase()) ||
-      t.content?.toLowerCase().includes(transcriptSearch.toLowerCase())
-  );
+  const filteredPosts = posts.filter((p) => {
+    const search = postSearch.toLowerCase();
+
+    return (
+      String(p.text || "").toLowerCase().includes(search) ||
+      String(p.name || "").toLowerCase().includes(search) ||
+      String(p.uid || "").toLowerCase().includes(search)
+    );
+  });
+
+  const filteredTranscripts = transcripts.filter((t) => {
+    const search = transcriptSearch.toLowerCase();
+
+    return (
+      String(t.userId || "").toLowerCase().includes(search) ||
+      String(t.subject || "").toLowerCase().includes(search) ||
+      String(t.instructor || "").toLowerCase().includes(search) ||
+      String(t.captions || "").toLowerCase().includes(search) ||
+      String(t.translated || "").toLowerCase().includes(search) ||
+      String(t.context || "").toLowerCase().includes(search)
+    );
+  });
 
   const overviewChartData = [
     {
@@ -221,8 +337,12 @@ export default function AdminDashboard({ user, addToast }) {
       total: stats.todayPosts,
     },
     {
-      name: "Transcripts",
+      name: "Sessions",
       total: stats.totalTranscripts,
+    },
+    {
+      name: "FSL",
+      total: stats.fslResources,
     },
     {
       name: "Likes",
@@ -256,6 +376,24 @@ export default function AdminDashboard({ user, addToast }) {
         <FaWrench /> Admin Dashboard
       </h2>
 
+      {dataError && (
+        <div
+          role="alert"
+          style={{
+            margin: "12px 0 18px",
+            padding: "12px 14px",
+            borderRadius: "12px",
+            background: "#fff7ed",
+            border: "1px solid #fed7aa",
+            color: "#9a3412",
+            fontSize: "14px",
+            fontWeight: 700,
+          }}
+        >
+          {dataError}
+        </div>
+      )}
+
       {/* Stats Cards */}
       <div className="admin-stats">
         <div className="stat-card">
@@ -274,13 +412,13 @@ export default function AdminDashboard({ user, addToast }) {
         </div>
 
         <div className="stat-card">
-          <h3>Transcripts</h3>
+          <h3>Sessions / Transcripts</h3>
           <p>{stats.totalTranscripts}</p>
         </div>
 
         <div className="stat-card">
-          <h3>Total Likes</h3>
-          <p>{stats.totalLikes}</p>
+          <h3>FSL Resources</h3>
+          <p>{stats.fslResources}</p>
         </div>
       </div>
 
@@ -380,32 +518,38 @@ export default function AdminDashboard({ user, addToast }) {
           </thead>
 
           <tbody>
-            {filteredUsers.map((u) => (
-              <tr key={u.id}>
-                <td>{u.email}</td>
-                <td>{u.displayName || "(no name)"}</td>
-                <td>{u.role || "user"}</td>
-                <td>
-                  {u.role !== "admin" ? (
-                    <button
-                      className="btn small"
-                      disabled={busy}
-                      onClick={() => changeUserRole(u.id, "admin")}
-                    >
-                      Promote
-                    </button>
-                  ) : (
-                    <button
-                      className="btn small"
-                      disabled={busy}
-                      onClick={() => changeUserRole(u.id, "user")}
-                    >
-                      Demote
-                    </button>
-                  )}
-                </td>
+            {filteredUsers.length === 0 ? (
+              <tr>
+                <td colSpan="4">No users found.</td>
               </tr>
-            ))}
+            ) : (
+              filteredUsers.map((u) => (
+                <tr key={u.id}>
+                  <td>{u.email || "N/A"}</td>
+                  <td>{u.displayName || "(no name)"}</td>
+                  <td>{u.role || "user"}</td>
+                  <td>
+                    {u.role !== "admin" ? (
+                      <button
+                        className="btn small"
+                        disabled={busy}
+                        onClick={() => changeUserRole(u.id, "admin")}
+                      >
+                        Promote
+                      </button>
+                    ) : (
+                      <button
+                        className="btn small"
+                        disabled={busy || u.id === user.uid}
+                        onClick={() => changeUserRole(u.id, "user")}
+                      >
+                        {u.id === user.uid ? "Current Admin" : "Demote"}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -435,40 +579,42 @@ export default function AdminDashboard({ user, addToast }) {
           </thead>
 
           <tbody>
-            {filteredPosts.map((p) => (
-              <tr key={p.id}>
-                <td>{p.name}</td>
-                <td style={{ maxWidth: "400px", overflowWrap: "anywhere" }}>
-                  {p.text}
-                </td>
-                <td>{p.likes || 0}</td>
-                <td>
-                  {p.createdAt?.toDate
-                    ? p.createdAt.toDate().toLocaleString()
-                    : "N/A"}
-                </td>
-                <td>
-                  <button
-                    className="btn danger"
-                    disabled={busy}
-                    onClick={() => handleDeletePost(p.id)}
-                  >
-                    Delete
-                  </button>
-                </td>
+            {filteredPosts.length === 0 ? (
+              <tr>
+                <td colSpan="5">No posts found.</td>
               </tr>
-            ))}
+            ) : (
+              filteredPosts.map((p) => (
+                <tr key={p.id}>
+                  <td>{p.name || p.uid || "N/A"}</td>
+                  <td style={{ maxWidth: "400px", overflowWrap: "anywhere" }}>
+                    {p.text || ""}
+                  </td>
+                  <td>{p.likes || 0}</td>
+                  <td>{formatDateTime(p.createdAt)}</td>
+                  <td>
+                    <button
+                      className="btn danger"
+                      disabled={busy}
+                      onClick={() => handleDeletePost(p.id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Transcripts Table */}
+      {/* Academic Sessions / Transcript Table */}
       <h3>
-        <FaFileAlt /> Transcripts
+        <FaFileAlt /> Academic Sessions / Transcripts
       </h3>
 
       <input
-        placeholder="Search transcripts..."
+        placeholder="Search sessions or transcripts..."
         value={transcriptSearch}
         onChange={(e) => setTranscriptSearch(e.target.value)}
         className="search-input"
@@ -479,21 +625,39 @@ export default function AdminDashboard({ user, addToast }) {
           <thead>
             <tr>
               <th>User ID</th>
-              <th>Post ID</th>
-              <th>Content</th>
+              <th>Subject</th>
+              <th>Instructor</th>
+              <th>Session Date</th>
+              <th>Captions</th>
+              <th>Translation</th>
+              <th>Status</th>
+              <th>Created</th>
             </tr>
           </thead>
 
           <tbody>
-            {filteredTranscripts.map((t) => (
-              <tr key={t.id}>
-                <td>{t.userId}</td>
-                <td>{t.postId}</td>
-                <td style={{ maxWidth: "400px", overflowWrap: "anywhere" }}>
-                  {t.content}
-                </td>
+            {filteredTranscripts.length === 0 ? (
+              <tr>
+                <td colSpan="8">No academic sessions found.</td>
               </tr>
-            ))}
+            ) : (
+              filteredTranscripts.map((t) => (
+                <tr key={t.id}>
+                  <td>{t.userId || "N/A"}</td>
+                  <td>{t.subject || "N/A"}</td>
+                  <td>{t.instructor || "N/A"}</td>
+                  <td>{t.sessionDate || "N/A"}</td>
+                  <td style={{ maxWidth: "400px", overflowWrap: "anywhere" }}>
+                    {t.captions || ""}
+                  </td>
+                  <td style={{ maxWidth: "400px", overflowWrap: "anywhere" }}>
+                    {t.translated || ""}
+                  </td>
+                  <td>{t.sessionStatus || "N/A"}</td>
+                  <td>{formatDateTime(t.createdAt)}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
