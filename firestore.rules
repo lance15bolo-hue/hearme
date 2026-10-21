@@ -19,7 +19,11 @@ service cloud.firestore {
 
       allow update: if request.auth != null
         && (
-          request.auth.uid == userId
+          (
+            request.auth.uid == userId
+            && !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(["username", "usernameNormalized"])
+          )
           || (
             get(/databases/$(database)/documents/users/$(request.auth.uid))
               .data.role == "admin"
@@ -30,6 +34,21 @@ service cloud.firestore {
 
       allow delete: if request.auth != null
         && request.auth.uid == userId;
+    }
+
+
+    // Username mappings and temporary reservations are server-managed only.
+    // Cloud Functions Admin SDK accesses these collections; browser clients cannot.
+    match /usernames/{username} {
+      allow read, write: if false;
+    }
+
+    match /_usernameReservations/{username} {
+      allow read, write: if false;
+    }
+
+    match /_usernameLoginRateLimits/{rateLimitId} {
+      allow read, write: if false;
     }
 
     match /posts/{postId} {

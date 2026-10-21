@@ -171,16 +171,6 @@ export default function Sidebar({
           </div>
 
 
-          <p className="sidebar-tagline">
-
-            Breaking Barriers.
-            <br />
-
-            <strong>
-              Building Connections.
-            </strong>
-
-          </p>
 
         </div>
 
@@ -337,13 +327,6 @@ export default function Sidebar({
 
 
 
-        <div className="sidebar-quote">
-
-          "Empowering every voice." 💚
-          <br />
-          Enriching every life.
-
-        </div>
 
 
       </div>

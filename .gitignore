@@ -21,3 +21,11 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Keep Firebase Functions environment files private
+/functions/.env*
+
+# Firebase Functions local files
+/functions/node_modules/
+/functions/firebase-debug.log
+/functions/.env*

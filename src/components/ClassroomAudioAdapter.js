@@ -48,6 +48,9 @@ export default function ClassroomAudioAdapter({
   const [audioSourceLabel, setAudioSourceLabel] =
     useState("");
 
+  const [audioTrackWarning, setAudioTrackWarning] =
+    useState("");
+
   const streamRef = useRef(null);
   const audioTrackRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -164,6 +167,8 @@ export default function ClassroomAudioAdapter({
 
     if (audioTrackRef.current) {
       audioTrackRef.current.onended = null;
+      audioTrackRef.current.onmute = null;
+      audioTrackRef.current.onunmute = null;
     }
 
     if (streamRef.current) {
@@ -220,6 +225,7 @@ export default function ClassroomAudioAdapter({
     setStatus("idle");
     setErrorMessage("");
     setAudioSourceLabel("");
+    setAudioTrackWarning("");
   };
 
   const handleTrackEnded = () => {
@@ -240,6 +246,7 @@ export default function ClassroomAudioAdapter({
 
     setStatus("idle");
     setAudioSourceLabel("");
+    setAudioTrackWarning("");
     setErrorMessage(
       "Classroom audio sharing ended. Start it again when you are ready."
     );
@@ -295,6 +302,7 @@ export default function ClassroomAudioAdapter({
     setStatus("requesting");
     setErrorMessage("");
     setAudioSourceLabel("");
+    setAudioTrackWarning("");
 
     try {
       /*
@@ -375,6 +383,30 @@ export default function ClassroomAudioAdapter({
 
       audioTrack.onended =
         handleTrackEnded;
+
+      /*
+        Some browsers temporarily mute a shared tab/window audio track
+        when its source is paused or stops producing audio. Surface that
+        state to the user instead of leaving the UI looking fully healthy
+        while captions have stopped updating.
+      */
+      audioTrack.onmute = () => {
+        if (!shouldBeActiveRef.current) {
+          return;
+        }
+
+        setAudioTrackWarning(
+          "The selected audio source is temporarily muted. Resume playback or check the shared tab/window audio settings."
+        );
+      };
+
+      audioTrack.onunmute = () => {
+        if (!shouldBeActiveRef.current) {
+          return;
+        }
+
+        setAudioTrackWarning("");
+      };
 
       const videoTrack =
         stream.getVideoTracks()[0];
@@ -684,8 +716,9 @@ export default function ClassroomAudioAdapter({
         </strong>
         <span>
           Click Start, choose the classroom/meeting
-          tab or window, then enable its audio sharing
-          option in the browser dialog.
+          tab or window, enable audio sharing, and make
+          sure the source is playing sound. If captions
+          stop, check that the selected source is not muted.
         </span>
       </div>
 
@@ -722,6 +755,17 @@ export default function ClassroomAudioAdapter({
         <div className="classroom-audio-helper">
           Stop direct microphone listening before
           starting classroom audio.
+        </div>
+      )}
+
+      {audioTrackWarning && !errorMessage && (
+        <div
+          className="classroom-audio-warning"
+          role="status"
+          aria-live="polite"
+        >
+          <FaExclamationTriangle />
+          <span>{audioTrackWarning}</span>
         </div>
       )}
 

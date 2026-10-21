@@ -85,18 +85,37 @@ export default function Profile({ user, addToast }) {
 
     try {
       const userRef = doc(db, "users", user.uid);
+      const previousName = String(profile.displayName || "");
+      const nextName = newName.trim();
+      const historyEntry = {
+        field: "Display name",
+        action: "Updated",
+        previousValue: previousName,
+        newValue: nextName,
+        changedAt: new Date().toISOString(),
+      };
+      const existingHistory = Array.isArray(profile.profileHistory)
+        ? profile.profileHistory
+        : [];
 
-      await updateDoc(userRef, { displayName: newName });
+      await updateDoc(userRef, {
+        displayName: nextName,
+        profileHistory: [historyEntry, ...existingHistory].slice(0, 20),
+      });
 
       // Update posts with your new name
       const postsSnap = await getDocs(collection(db, "posts"));
       const updates = postsSnap.docs
         .filter((d) => d.data().uid === user.uid)
-        .map((d) => updateDoc(doc(db, "posts", d.id), { name: newName }));
+        .map((d) => updateDoc(doc(db, "posts", d.id), { name: nextName }));
 
       await Promise.all(updates);
 
-      setProfile((p) => ({ ...p, displayName: newName }));
+      setProfile((p) => ({
+        ...p,
+        displayName: nextName,
+        profileHistory: [historyEntry, ...existingHistory].slice(0, 20),
+      }));
       setEditing(false);
       addToast && addToast("Display name updated", "success");
     } catch (err) {
@@ -114,9 +133,25 @@ export default function Profile({ user, addToast }) {
       const base64 = await downscaleImageToBase64(file);
 
       const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, { photoData: base64 });
+      const historyEntry = {
+        field: "Profile photo",
+        action: "Updated",
+        changedAt: new Date().toISOString(),
+      };
+      const existingHistory = Array.isArray(profile?.profileHistory)
+        ? profile.profileHistory
+        : [];
 
-      setProfile((p) => ({ ...p, photoData: base64 }));
+      await updateDoc(userRef, {
+        photoData: base64,
+        profileHistory: [historyEntry, ...existingHistory].slice(0, 20),
+      });
+
+      setProfile((p) => ({
+        ...p,
+        photoData: base64,
+        profileHistory: [historyEntry, ...existingHistory].slice(0, 20),
+      }));
       addToast && addToast("Profile picture updated", "success");
     } catch (err) {
       console.error(err);
@@ -252,6 +287,46 @@ export default function Profile({ user, addToast }) {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="profile-history-card" aria-labelledby="profile-history-title">
+        <div className="profile-history-heading">
+          <div>
+            <h3 id="profile-history-title">Profile Information History</h3>
+            <p>Recent changes to your display name and profile photo.</p>
+          </div>
+          <span className="profile-history-count">
+            {(Array.isArray(profile.profileHistory) ? profile.profileHistory : []).length} / 20
+          </span>
+        </div>
+
+        {Array.isArray(profile.profileHistory) && profile.profileHistory.length > 0 ? (
+          <ol className="profile-history-list">
+            {profile.profileHistory.slice(0, 20).map((entry, index) => (
+              <li className="profile-history-item" key={`${entry.changedAt || "history"}-${index}`}>
+                <span className="profile-history-marker" aria-hidden="true" />
+                <div className="profile-history-details">
+                  <strong>{entry.field || "Profile information"} {entry.action || "Updated"}</strong>
+                  {entry.field === "Display name" && (
+                    <p className="profile-history-change">
+                      {entry.previousValue || "(empty)"} <span aria-hidden="true">→</span> {entry.newValue || "(empty)"}
+                    </p>
+                  )}
+                  <time dateTime={entry.changedAt || undefined}>
+                    {entry.changedAt ? new Date(entry.changedAt).toLocaleString() : "Date not available"}
+                  </time>
+                </div>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="profile-history-empty">
+            No profile changes recorded yet. Future display-name and profile-photo updates will appear here.
+          </p>
+        )}
+        <p className="profile-history-privacy">
+          This history records up to 20 recent changes and does not store previous profile-photo images.
+        </p>
       </div>
     </section>
   );

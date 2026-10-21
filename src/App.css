@@ -3023,3 +3023,384 @@ table tr:hover td { background: #fafdfb; }
 
 }
 
+
+
+/* =========================================================
+   ACCOUNT SECURITY IMPROVEMENTS — LOGIN + SETTINGS
+   ========================================================= */
+.auth-description {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 18px;
+}
+
+.auth-notice {
+  color: #b9f6d5 !important;
+  background: rgba(20, 130, 85, 0.22);
+  border: 1px solid rgba(185, 246, 213, 0.35);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.login-card button.auth-text-button {
+  width: auto;
+  min-height: 0;
+  margin: 8px 0 0;
+  padding: 3px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #a8e9d0;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.login-card button.auth-text-button:hover {
+  transform: none;
+  color: #ffffff;
+}
+
+.login-card button.auth-text-button.inline {
+  display: inline;
+  margin: 0;
+}
+
+.login-card .auth-switch-row {
+  margin: 16px 0 0;
+  font-size: 13px;
+}
+
+.login-card button:disabled,
+.settings-page button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.settings-card.security-settings-card,
+.settings-card.password-settings-card {
+  align-items: flex-start;
+}
+
+.security-settings-content {
+  min-width: 0;
+}
+
+.security-email {
+  margin: 6px 0 !important;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.security-status {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.security-status.verified {
+  color: #116a43;
+  background: #d9fbe8;
+}
+
+.security-status.unverified {
+  color: #8a4b08;
+  background: #fff0c2;
+}
+
+.settings-action-button {
+  width: auto;
+  min-height: 38px;
+  margin-top: 12px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.settings-action-button.secondary-action {
+  margin-left: 8px;
+  background: transparent;
+}
+
+.settings-password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+  width: 100%;
+  max-width: 440px;
+}
+
+.settings-password-form label {
+  color: var(--hm-text);
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.settings-password-form input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--hm-border);
+  border-radius: 10px;
+  color: var(--hm-text);
+  background: var(--hm-surface, #ffffff);
+  font: inherit;
+  font-size: 13px;
+}
+
+.settings-password-form input:focus {
+  outline: 2px solid rgba(16, 122, 91, 0.2);
+  border-color: var(--brand);
+}
+
+.settings-form-error,
+.settings-form-success {
+  margin: 5px 0 !important;
+  font-size: 12px !important;
+  line-height: 1.5;
+}
+
+.settings-form-error {
+  color: #c62828 !important;
+}
+
+.settings-form-success {
+  color: #16834a !important;
+}
+
+.app-root.dark-mode .settings-password-form label {
+  color: #e2f5ec;
+}
+
+.app-root.dark-mode .settings-password-form input {
+  color: #e2f5ec;
+  background: #12251e;
+  border-color: #315548;
+}
+
+@media (max-width: 640px) {
+  .settings-card.security-settings-card,
+  .settings-card.password-settings-card {
+    flex-wrap: wrap;
+    padding: 18px;
+  }
+
+  .security-status {
+    margin-left: 62px;
+  }
+
+  .settings-action-button.secondary-action {
+    margin-left: 0;
+  }
+
+  .settings-password-form {
+    max-width: 100%;
+  }
+}
+
+
+/* =========================================================
+   HEARME CUSTOM CONFIRMATION DIALOGS
+   Replaces browser-native window.confirm() prompts.
+   ========================================================= */
+.hm-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  background: rgba(7, 22, 17, 0.54);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  animation: hm-confirm-fade-in 160ms ease-out;
+}
+
+.hm-confirm-dialog {
+  width: min(100%, 440px);
+  padding: 30px;
+  border: 1px solid rgba(15, 110, 86, 0.16);
+  border-radius: 24px;
+  background: #ffffff;
+  color: #12372b;
+  box-shadow: 0 28px 90px rgba(0, 25, 17, 0.28);
+  animation: hm-confirm-rise-in 190ms ease-out;
+}
+
+.hm-confirm-icon {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  border-radius: 17px;
+  background: #e3f5ed;
+  color: #0f6e56;
+  font-size: 21px;
+}
+
+.hm-confirm-icon.is-danger {
+  color: #b42332;
+  background: #fff0f0;
+}
+
+.hm-confirm-eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: #0f8063;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.hm-confirm-copy h2 {
+  margin: 0 0 10px;
+  color: #12372b;
+  font-size: 23px;
+  line-height: 1.25;
+  font-weight: 800;
+}
+
+.hm-confirm-copy p {
+  margin: 0;
+  color: #60766c;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.hm-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.hm-confirm-actions button {
+  min-height: 43px;
+  padding: 0 17px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+}
+
+.hm-confirm-actions button:hover { transform: translateY(-1px); }
+.hm-confirm-actions button:focus-visible {
+  outline: 3px solid rgba(15, 110, 86, 0.28);
+  outline-offset: 3px;
+}
+
+.hm-confirm-cancel {
+  border: 1px solid #d7e5de;
+  background: #f7faf8;
+  color: #355649;
+}
+.hm-confirm-cancel:hover { background: #edf5f0; }
+
+.hm-confirm-accept {
+  border: 1px solid #0f6e56;
+  background: #0f6e56;
+  color: #ffffff;
+}
+.hm-confirm-accept:hover { background: #0b5b46; }
+.hm-confirm-accept.is-danger {
+  border-color: #b42332;
+  background: #b42332;
+}
+.hm-confirm-accept.is-danger:hover { background: #921b28; }
+
+.app-root.dark-mode .hm-confirm-dialog {
+  border-color: rgba(138, 184, 160, 0.2);
+  background: #182a21;
+  color: #e2f5ec;
+}
+.app-root.dark-mode .hm-confirm-copy h2 { color: #e2f5ec; }
+.app-root.dark-mode .hm-confirm-copy p { color: #a2c1b0; }
+.app-root.dark-mode .hm-confirm-eyebrow { color: #7bd6b5; }
+.app-root.dark-mode .hm-confirm-icon { background: #203f31; color: #8be0bd; }
+.app-root.dark-mode .hm-confirm-icon.is-danger { background: #49262b; color: #ff9ca5; }
+.app-root.dark-mode .hm-confirm-cancel {
+  border-color: #385448;
+  background: #20372b;
+  color: #d9eee3;
+}
+.app-root.dark-mode .hm-confirm-cancel:hover { background: #294737; }
+
+@keyframes hm-confirm-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes hm-confirm-rise-in { from { opacity: 0; transform: translateY(8px) scale(0.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+@media (max-width: 520px) {
+  .hm-confirm-overlay { padding: 16px; }
+  .hm-confirm-dialog { padding: 23px; border-radius: 20px; }
+  .hm-confirm-copy h2 { font-size: 21px; }
+  .hm-confirm-actions { flex-direction: column-reverse; }
+  .hm-confirm-actions button { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hm-confirm-overlay,
+  .hm-confirm-dialog { animation: none; }
+  .hm-confirm-actions button { transition: none; }
+}
+
+/* =========================================================
+   PROFILE INFORMATION HISTORY
+   ========================================================= */
+.profile-history-card {
+  max-width: 900px;
+  margin-top: 18px;
+  padding: 20px 22px;
+  border: 1px solid #d8e5de;
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+.profile-history-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.profile-history-heading h3 { margin: 0 0 5px; font-size: 17px; color: var(--text); }
+.profile-history-heading p,
+.profile-history-privacy { margin: 0; color: var(--muted-2); font-size: 12px; line-height: 1.5; }
+.profile-history-count {
+  flex-shrink: 0;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--brand-tint);
+  color: var(--brand);
+  font-size: 11px;
+  font-weight: 800;
+}
+.profile-history-list { list-style: none; padding: 0; margin: 0; }
+.profile-history-item { display: flex; align-items: flex-start; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border); }
+.profile-history-item:last-child { border-bottom: 0; }
+.profile-history-marker { width: 9px; height: 9px; margin-top: 5px; flex-shrink: 0; border-radius: 50%; background: var(--brand-mid); box-shadow: 0 0 0 4px var(--brand-tint); }
+.profile-history-details { min-width: 0; }
+.profile-history-details strong { display: block; color: var(--text); font-size: 13px; }
+.profile-history-details time { display: block; margin-top: 5px; color: var(--muted-2); font-size: 11px; }
+.profile-history-change { margin: 5px 0 0; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.profile-history-empty { padding: 16px 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.profile-history-privacy { margin-top: 12px; }
+.app-root.dark-mode .profile-history-card { border-color: rgba(255,255,255,.1); }
+@media (max-width: 600px) {
+  .profile-history-card { padding: 17px; }
+  .profile-history-heading { gap: 8px; }
+  .profile-history-heading h3 { font-size: 15px; }
+}

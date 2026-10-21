@@ -276,3 +276,51 @@
 .app-root.dark-mode .panel > h3 {
   color: #e2f5ec;
 }
+
+/* More specific and readable user-role analytics */
+.chart-heading-group { margin-bottom: 6px; }
+.chart-description {
+  margin: -8px 0 8px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.role-breakdown-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+}
+.role-breakdown-item {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 13px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 13px;
+}
+.role-breakdown-dot { width: 9px; height: 9px; border-radius: 50%; }
+.role-breakdown-label { min-width: 0; }
+.role-breakdown-item strong { font-size: 15px; color: #0f172a; }
+.role-breakdown-percent { min-width: 52px; text-align: right; color: #64748b; font-variant-numeric: tabular-nums; }
+.chart-empty-state {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  padding: 20px;
+}
+.app-root.dark-mode .chart-description,
+.app-root.dark-mode .role-breakdown-percent,
+.app-root.dark-mode .chart-empty-state { color: #a8c2b4; }
+.app-root.dark-mode .role-breakdown-item {
+  background: #162118;
+  border-color: rgba(255,255,255,.1);
+  color: #d7e9df;
+}
+.app-root.dark-mode .role-breakdown-item strong { color: #e2f5ec; }

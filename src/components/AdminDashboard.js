@@ -359,11 +359,11 @@ export default function AdminDashboard({ user, addToast }) {
 
   const userRoleChartData = [
     {
-      name: "Admin",
+      name: "Administrator accounts",
       value: stats.adminUsers,
     },
     {
-      name: "Users",
+      name: "Standard user accounts",
       value: stats.regularUsers,
     },
   ];
@@ -470,27 +470,69 @@ export default function AdminDashboard({ user, addToast }) {
           </ResponsiveContainer>
         </div>
 
-        <div className="chart-card">
-          <h3>User Roles</h3>
+        <div className="chart-card user-role-chart-card">
+          <div className="chart-heading-group">
+            <h3>User Account Distribution</h3>
+            <p className="chart-description">
+              Breakdown of registered accounts by assigned role.
+            </p>
+          </div>
 
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={userRoleChartData}
-                dataKey="value"
-                nameKey="name"
-                outerRadius={100}
-                label
-              >
-                {userRoleChartData.map((entry, index) => (
-                  <Cell key={entry.name} fill={pieColors[index]} />
-                ))}
-              </Pie>
+          {stats.totalUsers === 0 ? (
+            <div className="chart-empty-state" role="status">
+              No user account data is available to display yet.
+            </div>
+          ) : (
+            <>
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={userRoleChartData}
+                    dataKey="value"
+                    nameKey="name"
+                    outerRadius={88}
+                    innerRadius={48}
+                    paddingAngle={3}
+                    label={({ value, percent }) =>
+                      `${value} (${(percent * 100).toFixed(1)}%)`
+                    }
+                    labelLine
+                  >
+                    {userRoleChartData.map((entry, index) => (
+                      <Cell key={entry.name} fill={pieColors[index]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value, name) => [
+                      `${value} account${Number(value) === 1 ? "" : "s"}`,
+                      name,
+                    ]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
 
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+              <div className="role-breakdown-list">
+                {userRoleChartData.map((entry, index) => {
+                  const percentage = stats.totalUsers
+                    ? ((entry.value / stats.totalUsers) * 100).toFixed(1)
+                    : "0.0";
+
+                  return (
+                    <div className="role-breakdown-item" key={entry.name}>
+                      <span
+                        className="role-breakdown-dot"
+                        style={{ backgroundColor: pieColors[index] }}
+                        aria-hidden="true"
+                      />
+                      <span className="role-breakdown-label">{entry.name}</span>
+                      <strong>{entry.value}</strong>
+                      <span className="role-breakdown-percent">{percentage}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       </div>
 

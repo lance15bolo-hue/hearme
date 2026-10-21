@@ -23,6 +23,7 @@ import LoadingScreen from "./components/LoadingScreen";
 import LandingPage from "./components/LandingPage";
 import History from "./components/History";
 import HistoryDetails from "./components/HistoryDetails";
+import ConfirmDialog from "./components/ConfirmDialog";
 
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
 
   const [loading, setLoading] = useState(true);
   const [authMode, setAuthMode] = useState(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const [theme, setTheme] = useState(
     () => localStorage.getItem("hearme-theme") || "light"
@@ -211,19 +213,28 @@ function App() {
 
 
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
 
-    await signOut(auth);
+  const confirmLogout = async () => {
+    setShowLogoutConfirm(false);
 
-    setGuestMode(false);
+    try {
+      await signOut(auth);
+      setGuestMode(false);
+      setReturnToGuest(false);
+      setAuthMode(null);
 
-    setAuthMode(null);
+      // Always start authenticated sessions from the Dashboard after logout.
+      // This prevents the previous page (for example, History) from remaining active.
+      setActivePage("dashboard");
+      setSelectedHistory(null);
 
-    addToast(
-      "Logged out",
-      "info"
-    );
-
+      addToast("Logged out", "info");
+    } catch (error) {
+      addToast("Unable to log out. Please try again.", "error");
+    }
   };
 
 
@@ -274,6 +285,7 @@ function App() {
 
     <LoginScreen
   initialMode={authMode}
+  addToast={addToast}
   onBack={() => {
 
     setAuthMode(null);
@@ -507,11 +519,10 @@ return (
         return (
 
           <Settings
-
             theme={theme}
-
             toggleTheme={toggleTheme}
-
+            user={activeUser}
+            addToast={addToast}
           />
 
         );
@@ -596,9 +607,19 @@ return (
 
 
       <ToastContainer
-
         toasts={toasts}
+      />
 
+      <ConfirmDialog
+        open={showLogoutConfirm}
+        title="Log out of HearMe?"
+        message="Are you sure you want to log out? Any work already saved will remain available when you sign in again."
+        confirmLabel="Yes, log out"
+        cancelLabel="Stay logged in"
+        variant="danger"
+        icon="logout"
+        onCancel={() => setShowLogoutConfirm(false)}
+        onConfirm={confirmLogout}
       />
 
 

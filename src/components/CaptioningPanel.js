@@ -2578,6 +2578,45 @@ async function translateWithGoogleCloud(
   );
 }
 
+/*
+  Keep common HearMe/domain acronyms intact during machine translation.
+  Translation providers sometimes treat an acronym such as GAD as an
+  ordinary word and return a different word (for example, GOD). Replacing
+  recognized acronyms with temporary tokens prevents that specific class
+  of translation error while leaving the surrounding sentence available
+  to the translation provider for context.
+*/
+const HEARME_PROTECTED_ACRONYM_PATTERN =
+  /\b(?:GAD|FSL|DHH|ICT|DOH|PWD|LGBTQIA?|COVID-19|TESDA|CHED|DSWD|LGUs?|NGOs?|UNESCO|WHO|NASA|API|URL|SMS|OTP|PDF|UI|UX|USB|AI)\b/g;
+
+function protectHearMeAcronyms(text) {
+  const acronyms = [];
+  const protectedText = String(text || "").replace(
+    HEARME_PROTECTED_ACRONYM_PATTERN,
+    (acronym) => {
+      const token = `ZXQHEARMEACRONYM${acronyms.length}QXZ`;
+      acronyms.push({ token, acronym });
+      return token;
+    }
+  );
+
+  return { protectedText, acronyms };
+}
+
+function restoreHearMeAcronyms(text, acronyms) {
+  let restoredText = String(text || "");
+
+  acronyms.forEach(({ token, acronym }) => {
+    // Providers may change placeholder casing, so restore case-insensitively.
+    restoredText = restoredText.replace(
+      new RegExp(token, "gi"),
+      acronym
+    );
+  });
+
+  return restoredText;
+}
+
 async function translateByCode(
   text,
   source,
@@ -2591,38 +2630,37 @@ async function translateByCode(
     return text;
   }
 
+  const { protectedText, acronyms } =
+    protectHearMeAcronyms(text);
+
+  const restore = (result) =>
+    restoreHearMeAcronyms(result, acronyms);
+
   try {
-  const googleResult =
-    await translateWithGoogleCloud(
-      text,
-      source,
-      target
+    const googleResult =
+      await translateWithGoogleCloud(
+        protectedText,
+        source,
+        target
+      );
+
+    if (googleResult) {
+      console.log(
+        `Translation provider: Google Cloud Translation (${source} → ${target})`
+      );
+      return restore(googleResult);
+    }
+  } catch (error) {
+    console.warn(
+      "Google Translation unavailable:",
+      error
     );
-
-
-  if (googleResult) {
-
-    console.log(
-      `Translation provider: Google Cloud Translation (${source} → ${target})`
-    );
-
-    return googleResult;
-
   }
-
-} catch (error) {
-
-  console.warn(
-    "Google Translation unavailable:",
-    error
-  );
-
-}
 
   try {
     const memoryResult =
       await translateWithMyMemory(
-        text,
+        protectedText,
         source,
         target
       );
@@ -2631,8 +2669,7 @@ async function translateByCode(
       console.log(
         `Translation provider: MyMemory (${source} → ${target})`
       );
-
-      return memoryResult;
+      return restore(memoryResult);
     }
   } catch (error) {
     console.error(

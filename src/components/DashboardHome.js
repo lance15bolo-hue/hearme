@@ -10,9 +10,11 @@ import {
   FaUsers,
   FaClock,
 } from "react-icons/fa";
+import ConfirmDialog from "./ConfirmDialog";
 
 export default function DashboardHome({ setActivePage, onNavigate }) {
   const [showUpdate, setShowUpdate] = useState(true);
+  const [showDismissConfirm, setShowDismissConfirm] = useState(false);
 
   const navigate = (page) => {
     if (typeof setActivePage === "function") {
@@ -143,7 +145,9 @@ export default function DashboardHome({ setActivePage, onNavigate }) {
                 </p>
               </div>
 
-              <button onClick={() => setShowUpdate(false)}>Dismiss</button>
+              <button onClick={() => setShowDismissConfirm(true)}>
+                Dismiss
+              </button>
             </div>
           )}
 
@@ -161,6 +165,21 @@ export default function DashboardHome({ setActivePage, onNavigate }) {
           </div>
         </aside>
       </div>
+
+      <ConfirmDialog
+        open={showDismissConfirm}
+        title="Dismiss this Major Update?"
+        message="You can close this announcement for now. Are you sure you want to dismiss it?"
+        confirmLabel="Yes, dismiss"
+        cancelLabel="Keep update"
+        variant="primary"
+        icon="update"
+        onCancel={() => setShowDismissConfirm(false)}
+        onConfirm={() => {
+          setShowDismissConfirm(false);
+          setShowUpdate(false);
+        }}
+      />
     </section>
   );
 }
