@@ -1,0 +1,133 @@
+[debug] [2026-10-24T02:30:32.528Z] ----------------------------------------------------------------------
+[debug] [2026-10-24T02:30:32.531Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions:cleanupDeletedSessionRecording
+[debug] [2026-10-24T02:30:32.531Z] CLI Version:   15.34.0
+[debug] [2026-10-24T02:30:32.531Z] Platform:      win32
+[debug] [2026-10-24T02:30:32.532Z] Node Version:  v24.14.0
+[debug] [2026-10-24T02:30:32.532Z] Detected Agent: unknown
+[debug] [2026-10-24T02:30:32.532Z] Time:          Sat Oct 24 2026 10:30:32 GMT+0800 (Taiwan Standard Time)
+[debug] [2026-10-24T02:30:32.532Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-10-24T02:30:32.558Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-10-24T02:31:06.878Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-10-24T02:31:06.879Z] > authorizing via signed-in user (lance15bolo@gmail.com)
+[debug] [2026-10-24T02:31:06.879Z] [iam] checking project hearme-d7bd1 for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2026-10-24T02:31:06.880Z] Checked if tokens are valid: false, expires at: 1792595619419
+[debug] [2026-10-24T02:31:06.881Z] Checked if tokens are valid: false, expires at: 1792595619419
+[debug] [2026-10-24T02:31:06.881Z] > refreshing access token with scopes: []
+[debug] [2026-10-24T02:31:06.883Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-10-24T02:31:06.883Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-10-24T02:31:07.068Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-10-24T02:31:07.068Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-10-24T02:31:07.087Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/hearme-d7bd1:testIamPermissions [none]
+[debug] [2026-10-24T02:31:07.088Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/hearme-d7bd1:testIamPermissions  x-goog-user-project=hearme-d7bd1
+[debug] [2026-10-24T02:31:07.088Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/hearme-d7bd1:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-10-24T02:31:07.363Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2026-10-24T02:31:07.363Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2026-10-24T02:31:07.446Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/hearme-d7bd1:testIamPermissions 200
+[debug] [2026-10-24T02:31:07.446Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/hearme-d7bd1:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-10-24T02:31:07.447Z] Checked if tokens are valid: true, expires at: 1792812666068
+[debug] [2026-10-24T02:31:07.447Z] Checked if tokens are valid: true, expires at: 1792812666068
+[debug] [2026-10-24T02:31:07.447Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/hearme-d7bd1/serviceAccounts/hearme-d7bd1@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2026-10-24T02:31:07.447Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/hearme-d7bd1/serviceAccounts/hearme-d7bd1@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2026-10-24T02:31:08.605Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/hearme-d7bd1/serviceAccounts/hearme-d7bd1@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2026-10-24T02:31:08.606Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/hearme-d7bd1/serviceAccounts/hearme-d7bd1@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[info] 
+[info] === Deploying to 'hearme-d7bd1'...
+[info] 
+[info] i  deploying functions 
+[debug] [2026-10-24T02:31:08.610Z] Checked if tokens are valid: true, expires at: 1792812666068
+[debug] [2026-10-24T02:31:08.610Z] Checked if tokens are valid: true, expires at: 1792812666068
+[debug] [2026-10-24T02:31:08.610Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/hearme-d7bd1 [none]
+[debug] [2026-10-24T02:31:08.892Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/hearme-d7bd1 200
+[debug] [2026-10-24T02:31:08.892Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/hearme-d7bd1 {"projectNumber":"1016455576819","projectId":"hearme-d7bd1","lifecycleState":"ACTIVE","name":"hearme","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-09-29T12:03:02.236163Z"}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2026-10-24T02:31:08.901Z] Checked if tokens are valid: true, expires at: 1792812666068
+[debug] [2026-10-24T02:31:08.902Z] Checked if tokens are valid: true, expires at: 1792812666068
+[debug] [2026-10-24T02:31:08.902Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/hearme-d7bd1/adminSdkConfig [none]
+[debug] [2026-10-24T02:31:09.821Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/hearme-d7bd1/adminSdkConfig 200
+[debug] [2026-10-24T02:31:09.821Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/hearme-d7bd1/adminSdkConfig {"projectId":"hearme-d7bd1","storageBucket":"hearme-d7bd1.firebasestorage.app"}
+[debug] [2026-10-24T02:31:09.822Z] Checked if tokens are valid: true, expires at: 1792812666068
+[debug] [2026-10-24T02:31:09.822Z] Checked if tokens are valid: true, expires at: 1792812666068
+[debug] [2026-10-24T02:31:09.822Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/hearme-d7bd1/configs [none]
+[debug] [2026-10-24T02:31:10.423Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/hearme-d7bd1/configs 200
+[debug] [2026-10-24T02:31:10.423Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/hearme-d7bd1/configs {"configs":[{"name":"projects/hearme-d7bd1/configs/deepgram"}]}
+[debug] [2026-10-24T02:31:10.424Z] Checked if tokens are valid: true, expires at: 1792812666068
+[debug] [2026-10-24T02:31:10.424Z] Checked if tokens are valid: true, expires at: 1792812666068
+[debug] [2026-10-24T02:31:10.424Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/hearme-d7bd1/configs/deepgram/variables [none]
+[debug] [2026-10-24T02:31:11.481Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/hearme-d7bd1/configs/deepgram/variables 200
+[debug] [2026-10-24T02:31:11.481Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/hearme-d7bd1/configs/deepgram/variables {"variables":[{"name":"projects/hearme-d7bd1/configs/deepgram/variables/key","updateTime":"2025-11-22T10:03:20.748325392Z"}]}
+[debug] [2026-10-24T02:31:11.481Z] Checked if tokens are valid: true, expires at: 1792812666068
+[debug] [2026-10-24T02:31:11.482Z] Checked if tokens are valid: true, expires at: 1792812666068
+[debug] [2026-10-24T02:31:11.482Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/hearme-d7bd1/configs/deepgram/variables/key [none]
+[debug] [2026-10-24T02:31:12.559Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/hearme-d7bd1/configs/deepgram/variables/key 200
+[debug] [2026-10-24T02:31:12.559Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/hearme-d7bd1/configs/deepgram/variables/key {"name":"projects/hearme-d7bd1/configs/deepgram/variables/key","updateTime":"2025-11-22T10:03:20.748325392Z","text":"5982563abeb5765686d199b2577a30aebdff7379"}
+[debug] [2026-10-24T02:31:12.561Z] Validating nodejs source
+[warn] !  functions: Couldn't find firebase-functions package in your source code. Have you run 'npm install'? 
+[debug] [2026-10-24T02:31:12.563Z] getFunctionsSDKVersion encountered error: Cannot find module 'firebase-functions'
+Require stack:
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\versioning.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\index.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\index.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\prepare.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\functionsEmulatorShared.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\frameworks\index.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\hosting\prepare.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\hosting\index.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\index.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\checkValidTargetFilters.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\commands\deploy.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\commands\index.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\index.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\cli.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js {"code":"MODULE_NOT_FOUND","requireStack":["C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\functions\\runtimes\\node\\versioning.js","C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\functions\\runtimes\\node\\index.js","C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\functions\\runtimes\\index.js","C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\functions\\prepare.js","C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\emulator\\functionsEmulatorShared.js","C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\frameworks\\index.js","C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\hosting\\prepare.js","C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\hosting\\index.js","C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\index.js","C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\checkValidTargetFilters.js","C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\commands\\deploy.js","C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\commands\\index.js","C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\index.js","C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\bin\\cli.js","C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\bin\\firebase.js"]}
+[debug] [2026-10-24T02:31:12.564Z] checkFunctionsSDKVersion encountered error: Invalid Version:  {}
+[debug] [2026-10-24T02:31:12.565Z] > [functions] package.json contents: {
+  "name": "hearme-functions",
+  "private": true,
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "lint": "node --check index.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.2",
+    "firebase-functions": "^6.3.2"
+  }
+}
+[debug] [2026-10-24T02:31:12.565Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase default to determine what to deploy 
+[debug] [2026-10-24T02:31:12.566Z] Could not parse firebase-functions version '' into semver.
+[debug] [2026-10-24T02:31:12.567Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-10-24T02:31:12.582Z] Error: Cannot find module 'firebase-functions'
+Require stack:
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\index.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\index.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\prepare.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\functionsEmulatorShared.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\frameworks\index.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\hosting\prepare.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\hosting\index.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\index.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\checkValidTargetFilters.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\commands\deploy.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\commands\index.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\index.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\cli.js
+- C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1456:15)
+    at require.resolve (node:internal/modules/helpers:163:19)
+    at Delegate.findFunctionsBinary (C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\index.js:98:33)
+    at Delegate.spawnFunctionsProcess (C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\index.js:128:30)
+    at Delegate.serveAdmin (C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\index.js:149:35)
+    at Delegate.discoverBuild (C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\index.js:192:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async loadCodebases (C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\prepare.js:548:33)
+    at async prepare (C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\prepare.js:181:24)
+    at async chain (C:\Users\ADMIN\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\index.js:119:9)
+[error] 
+[error] Error: An unexpected error has occurred.
