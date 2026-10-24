@@ -174,3 +174,21 @@ exports.signInWithUsername = onCall({ region: "asia-southeast1" }, async (reques
   const customToken = await getAuth().createCustomToken(uid);
   return { customToken };
 });
+
+// Cleanup runs only after Firestore has authorized and completed a session delete.
+// No browser-supplied bucket or object path is accepted by a public endpoint.
+const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
+const { getStorage } = require("firebase-admin/storage");
+const { RECORDING_BUCKET, cleanupRecording } = require("./cleanupRecording");
+exports.cleanupDeletedSessionRecording = onDocumentDeleted({
+  document: "academicSessions/{sessionId}",
+  region: "asia-southeast1",
+  retry: true,
+}, async (event) => {
+  if (!event.data) return;
+  await cleanupRecording({
+    recordingUrl: event.data.data().recordingUrl,
+    database: db,
+    bucket: getStorage().bucket(RECORDING_BUCKET),
+  });
+});

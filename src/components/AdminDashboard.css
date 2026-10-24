@@ -259,8 +259,13 @@
   border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
-.app-root.dark-mode .admin-table tr:hover td {
-  background: rgba(255, 255, 255, 0.04);
+.app-root.dark-mode .admin-table tbody tr:hover {
+  background: #243d30;
+}
+
+.app-root.dark-mode .admin-table tbody tr:hover td {
+  background: #243d30;
+  color: #e2f5ec;
 }
 
 .app-root.dark-mode .search-input {

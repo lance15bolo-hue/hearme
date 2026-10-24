@@ -1,21 +1,14 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   FaMicrophone,
-  FaMicrophoneAlt,
+  FaHistory,
   FaComment,
   FaSignLanguage,
   FaArrowRight,
-  FaBullhorn,
   FaRocket,
-  FaUsers,
-  FaClock,
 } from "react-icons/fa";
-import ConfirmDialog from "./ConfirmDialog";
 
 export default function DashboardHome({ setActivePage, onNavigate }) {
-  const [showUpdate, setShowUpdate] = useState(true);
-  const [showDismissConfirm, setShowDismissConfirm] = useState(false);
-
   const navigate = (page) => {
     if (typeof setActivePage === "function") {
       setActivePage(page);
@@ -34,10 +27,10 @@ export default function DashboardHome({ setActivePage, onNavigate }) {
       page: "captions",
     },
     {
-      title: "Recorder",
-      text: "Record and download your meeting or class sessions effortlessly.",
-      icon: <FaMicrophoneAlt />,
-      page: "recorder",
+      title: "Session History",
+      text: "Review and manage your saved academic sessions.",
+      icon: <FaHistory />,
+      page: "history",
     },
     {
       title: "Sign Bank",
@@ -54,7 +47,7 @@ export default function DashboardHome({ setActivePage, onNavigate }) {
   ];
 
   return (
-    <section className="dashboard-redesign">
+    <section className="dashboard-redesign dashboard-focused">
       <div className="dashboard-hero">
         <div>
           <span className="hero-pill">
@@ -75,32 +68,13 @@ export default function DashboardHome({ setActivePage, onNavigate }) {
 
             <button
               className="secondary"
-              onClick={() => navigate("recorder")}
+              onClick={() => navigate("signbank")}
             >
-              Open Recorder
+              Open Sign Phrase Bank
             </button>
           </div>
         </div>
 
-        <div className="hero-summary">
-          <div>
-            <FaMicrophone />
-            <strong>Live Captions</strong>
-            <span>Ready to use</span>
-          </div>
-
-          <div>
-            <FaMicrophoneAlt />
-            <strong>Recorder</strong>
-            <span>Audio download available</span>
-          </div>
-
-          <div>
-            <FaUsers />
-            <strong>Community</strong>
-            <span>Connect with users</span>
-          </div>
-        </div>
       </div>
 
       <div className="dashboard-grid-new">
@@ -130,56 +104,7 @@ export default function DashboardHome({ setActivePage, onNavigate }) {
           </div>
         </div>
 
-        <aside className="side-column">
-          {showUpdate && (
-            <div className="update-card-new">
-              <div className="update-icon-new">
-                <FaBullhorn />
-              </div>
-
-              <div>
-                <h3>Major Update</h3>
-                <p>
-                  Community features are coming next week. Check the forum for a
-                  preview.
-                </p>
-              </div>
-
-              <button onClick={() => setShowDismissConfirm(true)}>
-                Dismiss
-              </button>
-            </div>
-          )}
-
-          <div className="coming-card-new">
-            <h3>
-              <FaClock /> What's coming
-            </h3>
-
-            <ul>
-              <li>New community discussion threads</li>
-              <li>Image sharing in posts</li>
-              <li>Notifications for replies</li>
-              <li>Better user profiles</li>
-            </ul>
-          </div>
-        </aside>
       </div>
-
-      <ConfirmDialog
-        open={showDismissConfirm}
-        title="Dismiss this Major Update?"
-        message="You can close this announcement for now. Are you sure you want to dismiss it?"
-        confirmLabel="Yes, dismiss"
-        cancelLabel="Keep update"
-        variant="primary"
-        icon="update"
-        onCancel={() => setShowDismissConfirm(false)}
-        onConfirm={() => {
-          setShowDismissConfirm(false);
-          setShowUpdate(false);
-        }}
-      />
     </section>
   );
 }

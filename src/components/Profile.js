@@ -1,3 +1,4 @@
+import "./Profile.css";
 // src/components/Profile.js
 import React, { useState, useEffect } from "react";
 import {
@@ -163,7 +164,7 @@ export default function Profile({ user, addToast }) {
 
   if (!user || !profile) {
     return (
-      <section className="panel">
+      <section className="panel profile-panel">
         <h2>Profile</h2>
         <p>Loading...</p>
       </section>
@@ -176,7 +177,7 @@ export default function Profile({ user, addToast }) {
     "https://via.placeholder.com/120?text=No+Photo";
 
   return (
-    <section className="panel">
+    <section className="panel profile-panel">
       <div className="profile-header">
         <div>
           <h2 style={{ margin: 0 }}><FaUser /> My Profile</h2>

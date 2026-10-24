@@ -708,3 +708,44 @@
   outline: 2px solid currentColor;
   outline-offset: 2px;
 }
+/* Explicit theme colors for normal, hover and selected states. */
+.sign-bank-page { --sign-surface: #ffffff; --sign-soft: #f3f8f5; --sign-text: #173e2e; --sign-muted: #4f6c5d; --sign-line: #c9ded1; --sign-hover: #e5f3eb; --sign-active: #d4eddf; --sign-accent: #10674c; --sign-on-accent: #ffffff; }
+.app-root.dark-mode .sign-bank-page { --sign-surface: #1a2b22; --sign-soft: #15261c; --sign-text: #e2f5ec; --sign-muted: #adcabb; --sign-line: #3a5947; --sign-hover: #284a37; --sign-active: #244b37; --sign-accent: #85e1b7; --sign-on-accent: #103324; }
+.app-root .sign-bank-page .search-wrap input { background: var(--sign-soft); color: var(--sign-text); border: 1px solid var(--sign-line); font-size: 16px; padding-top: 14px; padding-bottom: 14px; }
+.app-root .sign-bank-page .search-wrap input::placeholder { color: var(--sign-muted); opacity: 1; }
+.app-root .sign-bank-page .search-icon { color: var(--sign-muted); opacity: 1; }
+.app-root .sign-bank-page .cat-pill { background: var(--sign-soft); color: var(--sign-text); border: 1px solid var(--sign-line); font-size: 14px; min-height: 42px; }
+.app-root .sign-bank-page .cat-pill:hover { background: var(--sign-hover); color: var(--sign-text); border-color: var(--sign-accent); }
+.app-root .sign-bank-page .cat-pill.active,
+.app-root .sign-bank-page .cat-pill.active:hover { background: var(--sign-accent); color: var(--sign-on-accent); border-color: var(--sign-accent); font-weight: 700; }
+.app-root .sign-bank-page .phrase-card { background: var(--sign-soft); color: var(--sign-text); border: 1px solid var(--sign-line); padding: 20px; min-width: 0; }
+.app-root .sign-bank-page .phrase-card:hover { background: var(--sign-hover); color: var(--sign-text); border-color: var(--sign-accent); }
+.app-root .sign-bank-page .phrase-card.active,
+.app-root .sign-bank-page .phrase-card.active:hover { background: var(--sign-active); color: var(--sign-text); border-color: var(--sign-accent); box-shadow: inset 4px 0 var(--sign-accent); }
+.app-root .sign-bank-page .phrase-card .phrase-card-name { color: var(--sign-text); font-size: 16px; line-height: 1.5; overflow-wrap: anywhere; }
+.app-root .sign-bank-page .phrase-card .phrase-card-filipino { color: var(--sign-muted); opacity: 1; font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
+.app-root .sign-bank-page .phrase-card .phrase-card-category { color: var(--sign-muted); opacity: 1; font-size: 13px; line-height: 1.5; }
+.app-root .sign-bank-page .phrase-count,
+.app-root .sign-bank-page .sign-bank-subtitle { color: var(--sign-muted); opacity: 1; }
+.app-root .sign-bank-page .sign-bank-header h2 { color: var(--sign-text); font-size: 27px; }
+.app-root .sign-bank-page .sign-detail,
+.app-root .sign-bank-page .sign-desktop-floating-preview .sign-detail,
+.app-root .sign-bank-page .sign-bank-hint { background: var(--sign-surface); color: var(--sign-text); border: 1px solid var(--sign-line); box-shadow: 0 16px 40px rgba(8,40,24,.14); }
+.app-root .sign-bank-page .sign-detail-info { padding-right: 26px; }
+.app-root .sign-bank-page .sign-detail-info h3 { color: var(--sign-text); overflow-wrap: anywhere; }
+.app-root .sign-bank-page .sign-category-badge { background: var(--sign-active); color: var(--sign-text); }
+.app-root .sign-bank-page .sign-filipino,
+.app-root .sign-bank-page .sign-description,
+.app-root .sign-bank-page .sign-bank-hint span { color: var(--sign-muted); opacity: 1; }
+.app-root .sign-bank-page .close-sign-preview { background: var(--sign-soft); color: var(--sign-text); border: 1px solid var(--sign-line); width: 34px; height: 34px; }
+.app-root .sign-bank-page .close-sign-preview:hover { background: var(--sign-hover); color: var(--sign-text); }
+.app-root .sign-bank-page .sign-video-placeholder { background: var(--sign-soft); color: var(--sign-text); border-color: var(--sign-line); }
+.app-root .sign-bank-page .sign-video-placeholder span { color: var(--sign-muted); opacity: 1; }
+.app-root .sign-bank-page .pagination-button { background: var(--sign-soft); color: var(--sign-text); border: 1px solid var(--sign-line); min-height: 42px; }
+.app-root .sign-bank-page .pagination-button:hover:not(:disabled) { background: var(--sign-hover); color: var(--sign-text); border-color: var(--sign-accent); }
+.app-root .sign-bank-page .pagination-button:disabled { opacity: .6; }
+.app-root .sign-bank-page .page-indicator { color: var(--sign-muted); opacity: 1; }
+.app-root .sign-bank-page button:focus-visible,
+.app-root .sign-bank-page input:focus-visible { outline: 3px solid var(--sign-accent); outline-offset: 3px; }
+@media (min-width: 601px) { .sign-bank-page .sign-desktop-floating-preview { max-height: calc(100dvh - 40px); overflow-y: auto; border-radius: 16px; } }
+@media (max-width: 600px) { .app-root .sign-bank-page .phrase-card { padding: 14px; } .app-root .sign-bank-page .phrase-card .phrase-card-name { font-size: 15px; } .app-root .sign-bank-page .sign-bank-header h2 { font-size: 24px; } .sign-bank-page .pagination-controls { flex-wrap: wrap; } }

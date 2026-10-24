@@ -12,7 +12,6 @@ import Settings from "./components/Settings";
 import Header from "./components/Header";
 import DashboardHome from "./components/DashboardHome";
 import CaptioningPanel from "./components/CaptioningPanel";
-import Recorder from "./components/Recorder";
 import SignPhraseBank from "./components/SignPhraseBank";
 import Community from "./components/Community";
 import Profile from "./components/Profile";
@@ -414,22 +413,6 @@ return (
   />
 
 );
-
-
-
-      case "recorder":
-
-        return (
-
-          <Recorder
-
-            user={activeUser}
-
-            addToast={addToast}
-
-          />
-
-        );
 
 
 
